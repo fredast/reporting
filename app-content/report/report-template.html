@@ -1,0 +1,90 @@
+<div class="container-fluid" id="cmd-navbar">
+	<div class="row">
+		<div class="col-md-2">
+			<p class="lead" id="report-title"></p>
+		</div>
+		<div class="col-md-2">
+			<form class="form-inline" role="form">
+				<input type="text" class="form-control" placeholder="Search" id="cmd-search-box">
+			</form>
+		</div>
+		<div class="col-md-3">
+			<div class="input-group" style="display: none;" id="cmd-cameleon">
+        		<span class="input-group-addon">See as</span>
+				<select class="form-control"></select>
+				<span class="input-group-addon" id="cmd-cameleon-cancel">
+					<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+				</span>
+			</div>
+		</div>
+		<div class="col-md-5 text-right">
+			<button type="button" class="btn btn-default" id="cmd-show-all" style="display: none;">Show all</button>
+			<button type="button" class="btn btn-default" id="cmd-show-team">Show team</button>
+			<button type="button" class="btn btn-default" data-toggle="modal" data-target="#modal-info">Info</button>
+			<button type="button" class="btn btn-default special" id="cmd-copy-header">Copy header</button>
+			<button type="button" class="btn btn-primary" id="cmd-save">Save</button>
+			<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal-discard">Discard</button>
+		</div>
+	</div>
+	
+	<div class="modal fade" id="modal-discard" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel">Discard changes?</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to discard unsaved changes?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-danger" id="cmd-confirm-discard">Discard</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="modal fade" id="modal-save" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel">Save changes?</h4>
+				</div>
+				<div class="modal-body">
+					<ul>
+						<li>add <span id="data-nb-add"></span> <span class="data-report-name"></span>,</li>
+						<li>update <span id="data-nb-update"></span> <span class="data-report-name"></span>,</li>
+						<li>delete <span id="data-nb-delete"></span> <span class="data-report-name"></span>.</li>
+					</ul>
+					<p>SAVE INFO</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary" id="cmd-confirm-save" data-loading-text="Saving...">Save</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="modal-info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+					<h4 class="modal-title" id="myModalLabel">Info</h4>
+				</div>
+				<div class="modal-body" id="modal-info-markdown">
+					
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="container-fluid" id="handsontable-bootstrap-container">
+	<div id="handsontable-container"></div>
+</div>

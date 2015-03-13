@@ -1,0 +1,26 @@
+
+#cmd-navbar {
+	position: fixed;
+	top: 50px;
+	width: 100%;
+	z-index: 1000;
+	background-color: white;
+	padding-bottom: 10px;
+	padding-top: 5px;
+}
+
+#cmd-navbar .modal {
+	margin-top: 50px;
+}
+
+#report-title {
+	margin-bottom: 0px;
+}
+
+#handsontable-bootstrap-container {
+	margin-top: 40px
+}
+
+#cmd-cameleon-cancel {
+	cursor: pointer;
+}

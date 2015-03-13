@@ -1,0 +1,429 @@
+/* Feuille de style */
+
+/* Move the body bellow the navbar */
+body { padding-top: 60px; }
+
+/*
+	------------
+	Navbar
+	------------
+*/
+.navbar-default {
+	background-color: #333;
+	color: #999;
+}
+.navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:hover, .navbar-default .navbar-nav>.active>a:focus {
+	background-color: #494949;
+	color: #ccc;
+}
+.navbar-default .navbar-nav>li>a {
+	color: #999;
+}
+.navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:focus {
+	background-color: #494949;
+	color: #ccc;
+}
+.navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:hover, .navbar-default .navbar-nav>.open>a:focus {
+	background-color: #494949;
+	color: #ccc;
+}
+.navbar-default .navbar-brand, .navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
+	color: #fff;
+}
+.navbar-nav>li>.dropdown-menu {
+	background-color: #333;
+}
+.navbar-nav>li>.dropdown-menu>li>a {
+	color: #999;
+}
+.dropdown-menu>.active>a, .dropdown-menu>.active>a:hover, .dropdown-menu>.active>a:focus {
+	background-color: #494949;
+	color: #ccc !important;
+}
+.navbar-nav>li>.dropdown-menu>li>a:hover, .navbar-nav>li>.dropdown-menu>li>a:focus {
+	background-color: #494949;
+	color: #ccc !important;
+}
+
+
+
+/*
+	------------
+	Handsontable
+	------------
+*/
+
+.btn.special {
+    color: #333;
+	background-color: #fff;
+	border-color: #ccc;
+    text-decoration: none;
+    background-position: 0;
+    transition: none;
+}
+
+.handsontable {
+	font-size: 9px;
+}
+.handsontable .handsontable table {
+	-webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+.handsontable th, .handsontable td {
+	height: 16px;
+	line-height: 16px;
+}
+.handsontable input[type=checkbox] {
+	height: 11px;
+	margin: 0px;
+}
+
+.handsontable .currentRow {
+  background-color: #F5F6FC;
+}
+
+
+
+#dash-modal-settings .bootstrap-tagsinput {
+width: 100% !important;
+}
+
+/*
+	------------
+	Dashboard
+	------------
+*/
+
+#dash-tabs-bar .close {
+	padding: 0 0 0 5px;
+}
+
+/*
+	------------
+	Widgets
+	------------
+*/
+
+.widget {
+	padding: 3px;
+	float: none;
+}
+
+/* Size medium */
+.height-auto {
+	height: auto;
+}
+
+.height-100 {
+	height: 100px;
+}
+
+.height-200 {
+	height: 200px;
+}
+
+.height-300 {
+	height: 300px;
+}
+
+.height-400 {
+	height: 400px;
+}
+
+.height-500 {
+	height: 500px;
+}
+
+.height-600 {
+	height: 600px;
+}
+
+.height-700 {
+	height: 700px;
+}
+
+.height-800 {
+	height: 800px;
+}
+
+/* Content */
+.widget-content {
+	height: 100%;
+	margin: 0;
+	font-size: 11px;
+}
+
+.widget-content .show-settings {
+	position: absolute;
+	bottom: 12px;
+	right: 15px;
+	cursor:pointer;
+}
+
+.widget-content .panel-heading {
+	height: 28px;
+	padding: 6px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.maximizable .widget-content .panel-heading {
+	padding-right: 30px;
+}
+
+.widget-content .panel-heading .toolbar {
+	position: absolute;
+	right: 8px;
+	top: 7px;
+}
+
+.widget-content input {
+	font-size: 10px;
+	padding: 3px 5px;
+	height: 23px;
+}
+
+.widget-content .input-group-addon {
+	font-size: 10px;
+	padding: 4px 7px 5px 7px;
+}
+
+.widget-content .control-label {
+	padding-top: 5px;
+}
+
+.widget-content .panel-body {
+	padding: 10px;
+}
+
+.widget-content .dropdown-menu {
+	font-size: 10px;
+}
+
+
+/* Report Number */
+
+.reportNumber .widget-number {
+	top: 50%;
+	position: relative;
+	margin-top: -28px;
+}
+
+.widget-number {
+	padding: 2px 0;
+	text-align: center;
+}
+.widget-number-value {
+	font-size: 150%;
+}
+
+/* Report table */
+.widget-content .handsontable-container {
+	padding-top: 10px;
+}
+.widget-content .handsontable-container td {
+	overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.widget-content .handsontable .htDimmed {
+	color: black;
+}
+.popover {
+	max-width: 500px;
+}
+.popover-table {
+	font-size: 10px;
+	padding: 4px;
+}
+.popover-table tr > td:first-child {
+	font-weight: bold;
+}
+
+
+.dl-horizontal dt {
+	width: 85px;
+}
+
+.dl-horizontal dd {
+	margin-left: 90px;
+}
+
+/* Sorting glyphs in datatables */
+th.sorting,
+th.sorting_desc,
+th.sorting_asc {
+	cursor: pointer;
+	position: relative;
+}
+
+th.sorting_asc:after,
+th.sorting_desc:after {
+	font-family: 'Glyphicons Halflings';
+  font-weight: normal;
+  font-style: normal;
+	position: absolute;
+	bottom: -5px;
+	left: 50%;
+  display: block;
+}
+
+th.sorting_asc:after {
+	content: "\e253";
+}
+
+th.sorting_desc:after {
+	content: "\e252";
+}
+
+/* For full-width modals */
+
+.modal-fullwidth {
+	width: 95%;
+	height: calc(100% - 61px);
+}
+
+.modal-fullwidth .modal-content {
+	height: 100%;
+}
+
+.modal-fullwidth .modal-body {
+	height: calc(100% - 60px);
+}
+
+/* Table customisation in datatable reports */
+.reportDatatable table,
+.reportDatatable .table-responsive {
+	width: 100% !important;
+}
+.reportDatatable .table-responsive,
+.reportDatatable .sideinfo .content {
+	height: calc(100% - 40px);
+	overflow: auto;
+}
+
+.reportDatatable .dataTables_wrapper th,
+.reportDatatable .dataTables_wrapper td {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 80px;
+}
+
+.reportDatatable .dataTables_wrapper .active th,
+.reportDatatable .dataTables_wrapper .active td {
+	background-color: #E0E0E0;
+}
+
+.reportDatatable .dataTables_filter {
+	display: inline-block;
+}
+
+.reportDatatable .dataTables_filter input {
+	margin-left: 6px;
+}
+
+.reportDatatable .DTTT {
+	float: right;
+	position: relative;
+	right: 1px;
+}
+
+.reportDatatable .sideinfo {
+	height:	100%;
+	overflow: auto;
+	padding-right: 0;
+	border-left: 1px solid #e5e5e5;
+}
+
+.reportDatatable .dataTables_wrapper.col-xs-7 {
+	padding-left: 0;
+}
+
+.reportDatatable .dataTables_wrapper {
+	height:	calc(100% - 27px);
+	overflow: auto;
+}
+
+.reportDatatable.modal-body .dataTables_wrapper {
+	height:	100%;
+}
+
+.reportDatatable.modal-body .dataTables_wrapper tbody tr {
+	cursor: pointer;
+}
+
+/* Chart height in chart reports */
+
+.reportChart .widget-content {
+	overflow: hidden;
+}
+
+.reportChart.height-100 .highcharts {
+	height: 63px;
+}
+
+.reportChart.height-200 .highcharts {
+	height: 163px;
+}
+
+.reportChart.height-300 .highcharts {
+	height: 263px;
+}
+
+.reportChart.height-400 .highcharts {
+	height: 363px;
+}
+
+.reportChart.height-500 .highcharts {
+	height: 463px;
+}
+
+.reportChart.height-600 .highcharts {
+	height: 563px;
+}
+
+.reportChart.height-700 .highcharts {
+	height: 663px;
+}
+
+.reportChart.height-800 .highcharts {
+	height: 763px;
+}
+
+.reportChart.modal-body .highcharts {
+	height: calc(100% - 42px);
+}
+
+/* WIDGET FILTER */
+
+.reportFilter .panel-heading {
+	overflow: initial;
+}
+
+.reportFilter .panel-heading > * {
+	margin-top: -4px;
+}
+
+.reportFilter .typeahead {
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+.reportFilter .glyphicon-filter {
+	position: absolute;
+	top: 17px;
+}
+
+.reportFilter .form-horizontal {
+	max-width: 500px;
+}
+
+.reportFilter .form-control-feedback {
+	top: -3px;
+}
+
+.reportFilter .form-group {
+	margin-bottom: 5px;
+}
