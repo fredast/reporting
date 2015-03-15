@@ -162,7 +162,10 @@ Report.prototype.initialize = function(){
 
 	// Info markdown
 	$('#modal-info-markdown').html(marked(reportMarkdown[thisR.type.code]));
-	
+
+	// Fixed columns
+	thisR.fixedColumnsLeft = thisR.type.fixedColumnsLeft;
+
 	// Columns
 	thisR.columnsMap = {};
 	thisR.type.columns.forEach(function(col, index){
@@ -248,7 +251,7 @@ Report.prototype.initialize = function(){
 		currentRowClassName: 'currentRow',
 		columnSorting: true,
 		renderAllRows: true,
-		fixedColumnsLeft: 4,
+		fixedColumnsLeft: thisR.fixedColumnsLeft,
 		stretchH: 'all',
 		columns: thisR.type.columns,
 		contextMenu: ['row_above', 'row_below', 'remove_row'],
@@ -346,7 +349,7 @@ Report.prototype.initialize = function(){
 				var element = thisR.handsontableHandler.getCell(r2, c2);
 				a = element;
 				var offset = $(element).offset().left + $(element).outerWidth() - $(window).scrollLeft() - $('body').innerWidth();
-				var fixedColumnsLeft = 4;
+				var fixedColumnsLeft = thisR.fixedColumnsLeft;
 				if(c >= fixedColumnsLeft){
 					var lastFixedColumn = thisR.handsontableHandler.getCell(r2, fixedColumnsLeft-1);
 					var right_shift = $(lastFixedColumn).offset().left + $(lastFixedColumn).outerWidth();
