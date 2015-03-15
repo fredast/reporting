@@ -69,10 +69,7 @@ Report.prototype.importSpark = function(row){
 	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
 	var entry = thisR.currentData[data_row];
 	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true 
-		&& typeof entry.ref == "string" && entry.ref != ""){ 
-		entry.import = 'pending';
-
-		// Import spark......
+		&& typeof entry.ref == "string" && entry.ref != ""){
 
 		$.ajax({
 			url: "http://markeng.fr.world.socgen/mapping/sparksDeal/" + entry.ref,
@@ -273,7 +270,6 @@ Report.prototype.initialize = function(){
 						thisR.importSpark(i);
 					} 
 					thisR.pendingSpark += Math.max(selected[0], selected[2]) - Math.min(selected[0], selected[2]) + 1;
-					thisR.handsontableHandler.render();
 				}
 			}
 		},
