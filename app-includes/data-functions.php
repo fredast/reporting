@@ -269,6 +269,7 @@ function report_save(){
 		while(count($data_array) > REPORT_MAX_HISTORY){
 			reset($data_array);
 			unset($data_array[key($data_array)]);
+			$data_array = array_values($data_array);
 		}
 		$last_entry = end($data_array);
 		//Add meta to the entry
