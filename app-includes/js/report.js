@@ -166,6 +166,13 @@ Report.prototype.initialize = function(){
 	// Fixed columns
 	thisR.fixedColumnsLeft = thisR.type.fixedColumnsLeft;
 
+	// Column width and headers
+	thisR.type.columnsWidth = thisR.type.columns.map(function(col){return col.width});
+	thisR.type.columnsHeader = thisR.type.columns.map(function(col){return col.header});
+
+	// Date formats
+	thisR.DATE_FORMATS = ["DD/MM/YY", "DD/MM/YYYY", "YYYY-MM-DD", "D-M"];
+
 	// Columns
 	thisR.columnsMap = {};
 	thisR.type.columns.forEach(function(col, index){
@@ -225,6 +232,13 @@ Report.prototype.initialize = function(){
 				TD.style.backgroundColor = backgroundColor; //col.backgroundColor;
 			}
 		}
+
+		// Date validator
+		if(col.type == "date"){
+			col.validator = function (value, callback) {
+				callback(moment(value, thisR.DATE_FORMATS).isValid());
+			}
+		}
 		// Columns map
 		thisR.columnsMap[col.data] = col;
 	});
@@ -250,19 +264,17 @@ Report.prototype.initialize = function(){
 		rowHeaders: true,
 		currentRowClassName: 'currentRow',
 		columnSorting: true,
-		renderAllRows: true,
-		fixedColumnsLeft: thisR.fixedColumnsLeft,
-		stretchH: 'all',
+		renderAllRows: !thisR.all,
+		renderAllColumns: !thisR.all,
+		fixedColumnsLeft: thisR.type.fixedColumnsLeft,
+		colWidth: thisR.columnsWidth,
 		columns: thisR.type.columns,
 		contextMenu: ['row_above', 'row_below', 'remove_row'],
-		beforeRender: function(isForced){
-			if(isForced){
-				if(typeof thisR.handsontableHandler != "object")
-					thisR.handsontableHandler = $('#handsontable-container').handsontable('getInstance');
-				thisR.handsontableHandler.validateCells(function(){});
-			}
-		},
 		afterInit: function(){
+			thisR.handsontableHandler = $('#handsontable-container').handsontable('getInstance');
+			if(!thisR.all){
+				setTimeout(function() { thisR.handsontableHandler.validateCells(function(){}); }, Math.max(thisR.data.length, 100));
+			}
 			setTimeout(function() { thisR.handsontableHandler.render(); }, Math.max(2*thisR.data.length, 200));
 		},
 		beforeKeyDown: function(event){
@@ -277,6 +289,7 @@ Report.prototype.initialize = function(){
 			}
 		},
 		afterChange: function(change, source){
+			console.log(change);
 			var modified = false;
 			if(Object.prototype.toString.call(change) == "[object Array]"){
 				change.forEach(function(entry){
@@ -321,6 +334,7 @@ Report.prototype.initialize = function(){
 				});
 			}
 			if(source == "paste" || modified){
+				thisR.handsontableHandler.validateCells(function(){});
 				setTimeout(function() { thisR.handsontableHandler.render(); }, 100);
 			}
 		},
@@ -330,8 +344,9 @@ Report.prototype.initialize = function(){
 					// Post processing
 					if(source == "edit" || source == "paste"){
 						// Format date
+						console.log(entry);
 						if(thisR.columnsMap[entry[1]].type == "date"){
-							entry[3] = moment(entry[3], ["DD/MM/YY", "DD/MM/YYYY", "YYYY-MM-DD", "D-M"]).format("DD/MM/YYYY");
+							entry[3] = moment(entry[3], thisR.DATE_FORMATS).format("DD/MM/YYYY");
 						}
 						// Format numbers
 						if(thisR.columnsMap[entry[1]].dataType == "numeric"){
@@ -399,12 +414,13 @@ Report.prototype.initialize = function(){
 	// __Save
 	$('#cmd-confirm-save').click(function(){thisR.save();});
 	// Search button
-	$('#cmd-search-box').keyup(function(event){
+	$('#cmd-search-box').keydown(function(event){
 		if(event.keyCode == 13) {
 			event.preventDefault();
+			thisR.search();
 			return false;
 		}
-		thisR.search();
+		//thisR.search();
 	});
 };
 	
@@ -497,7 +513,7 @@ Report.prototype.search = function(){
 		});
 	}
 	thisR.handsontableHandler.loadData(thisR.currentData);
-	setTimeout(function() { thisR.handsontableHandler.render(); }, 100);
+	//setTimeout(function() { thisR.handsontableHandler.render(); }, 100);
 };
 
 Report.prototype.cleanData = function(){

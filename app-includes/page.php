@@ -43,8 +43,8 @@ function page_header($page_title = APP_NAME, $additional_head = "") {
 	$header .= '<meta name="apple-mobile-web-app-capable" content="yes">' . PHP_EOL;
 	// jQuery
 	$header .= '<script src="' . APPURL . APPINC . 'js/jquery-1.11.1.min.js"></script>' . PHP_EOL;
-	$header .= '<script src="' . APPURL . APPINC . 'js/jquery-ui.min.js"></script>' . PHP_EOL;
-	$header .= '<link rel="stylesheet" media="screen" href="' . APPURL . APPINC . 'css/jquery-ui.min.css">' . PHP_EOL;
+	//$header .= '<script src="' . APPURL . APPINC . 'js/jquery-ui.min.js"></script>' . PHP_EOL;
+	//$header .= '<link rel="stylesheet" media="screen" href="' . APPURL . APPINC . 'css/jquery-ui.min.css">' . PHP_EOL;
 	// Moment.js
 	$header .= '<script src="' . APPURL . APPINC . 'js/moment.js"></script>' . PHP_EOL;
 	// Numeral.js

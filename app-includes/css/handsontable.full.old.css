@@ -1,12 +1,12 @@
 /*!
- * Handsontable 0.13.0
+ * Handsontable 0.12.4
  * Handsontable is a JavaScript library for editable tables with basic copy-paste compatibility with Excel and Google Docs
  *
  * Copyright 2012-2014 Marcin Warpechowski
  * Licensed under the MIT license.
  * http://handsontable.com/
  *
- * Date: Mon Mar 09 2015 12:16:05 GMT+0100 (CET)
+ * Date: Fri Jan 23 2015 10:07:24 GMT+0100 (CET)
  */
 
 .handsontable {
@@ -281,14 +281,7 @@
 }
 
 .handsontable td.area {
-  background: -moz-linear-gradient(top,  rgba(181,209,255,0.34) 0%, rgba(181,209,255,0.34) 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(181,209,255,0.34)), color-stop(100%,rgba(181,209,255,0.34))); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top,  rgba(181,209,255,0.34) 0%,rgba(181,209,255,0.34) 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top,  rgba(181,209,255,0.34) 0%,rgba(181,209,255,0.34) 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top,  rgba(181,209,255,0.34) 0%,rgba(181,209,255,0.34) 100%); /* IE10+ */
-  background: linear-gradient(to bottom,  rgba(181,209,255,0.34) 0%,rgba(181,209,255,0.34) 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#57b5d1ff', endColorstr='#57b5d1ff',GradientType=0 ); /* IE6-9 */
-  background-color: #fff;
+  background-color: #EEF4FF;
 }
 
 /* fill handle */
@@ -305,14 +298,15 @@
 }
 
 .handsontableInput {
-  border:none;
+  border: 2px solid #5292F7;
   outline-width: 0;
-  margin: 0 ;
-  padding: 1px 5px 0 5px;
+  margin: 0;
+  padding: 1px 4px 0 2px;
   font-family: inherit;
-  line-height: 21px;
+  line-height: inherit;
   font-size: inherit;
-  box-shadow: 0 0 0 2px #5292F7 inset;
+  -webkit-box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.4);
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.4);
   resize: none;
   /*below are needed to overwrite stuff added by jQuery UI Bootstrap theme*/
   display: inline-block;
@@ -320,6 +314,10 @@
   border-radius: 0;
   background-color: #FFF;
   /*overwrite styles potentionally made by a framework*/
+}
+
+.handsontableInput:focus {
+  border: 2px solid #5292F7;
 }
 
 .handsontableInputHolder {

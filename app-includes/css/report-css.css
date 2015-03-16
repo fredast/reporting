@@ -24,3 +24,16 @@
 #cmd-cameleon-cancel {
 	cursor: pointer;
 }
+
+#handsontable-container td {
+	overflow: hidden;
+  	text-overflow: ellipsis;
+ 	white-space: nowrap;
+ 	position: relative;
+}
+
+#handsontable-container .htAutocompleteArrow {
+	position: absolute;
+	top: 0;
+	right: 0;
+}

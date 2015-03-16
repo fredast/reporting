@@ -48,12 +48,14 @@ $widget_include .= '<script src="' . APPURL . APPINC . 'js/widgets/widget-empty.
 # Headers
 $include_report = '<script src="' . LIB . 'zeroclipboard-2.2.0/ZeroClipboard.js"></script>' . PHP_EOL;
 $include_report .= '<link rel="stylesheet" media="screen" href="' . APPURL . APPINC . 'css/handsontable.full.css">' . PHP_EOL;
+$include_report .= '<link rel="stylesheet" media="screen" href="' . APPURL . APPINC . 'css/pikaday.css">' . PHP_EOL;
 $include_report .= '<link rel="stylesheet" media="screen" href="' . APPURL . APPINC . 'css/report-css.css?rand=' . time() . '">' . PHP_EOL;
 $include_report .= '<script src="' . APPURL . APPINC . 'js/marked.min.js"></script>' . PHP_EOL;
+$include_report .= '<script src="' . APPURL . APPINC . 'js/pikaday.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_report .= "<script>reportMarkdown = " . file_get_contents(ABSPATH."report-markdown.json") . ";</script>" . PHP_EOL;
 $include_report .= '<script src="' . APPURL . APPINC . 'js/handsontable.full.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_report .= '<script src="' . APPURL . APPINC . 'js/report.js?rand=' . time() . '"></script>' . PHP_EOL;
-$include_report .= '<script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"></script>' . PHP_EOL;
+//$include_report .= '<script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"></script>' . PHP_EOL;
 define( 'INCLUDE_REPORT', $include_report );
 
 $include_dashboard_admin = '<link rel="stylesheet" media="screen" href="' . LIB . '/bootstrap-tagsinput-0.5.0/bootstrap-tagsinput.css">' . PHP_EOL;

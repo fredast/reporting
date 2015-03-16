@@ -1,12 +1,12 @@
 /*!
- * Handsontable 0.13.0
+ * Handsontable 0.12.4
  * Handsontable is a JavaScript library for editable tables with basic copy-paste compatibility with Excel and Google Docs
  *
- * Copyright 2012-2015 Marcin Warpechowski
+ * Copyright 2012-2014 Marcin Warpechowski
  * Licensed under the MIT license.
  * http://handsontable.com/
  *
- * Date: Mon Mar 09 2015 12:16:05 GMT+0100 (CET)
+ * Date: Fri Jan 23 2015 10:07:24 GMT+0100 (CET)
  */
 /*jslint white: true, browser: true, plusplus: true, indent: 4, maxerr: 50 */
 
@@ -246,33 +246,10 @@ if (typeof WeakMap === 'undefined') {
 Handsontable.activeGuid = null;
 
 /**
- * @alias Handsontable.Core
+ * Handsontable constructor
+ * @param rootElement The DOM element in which Handsontable DOM will be inserted
+ * @param userSettings
  * @constructor
- * @description
- *
- * After Handsontable is constructed, you can modify the grid behavior using the available public methods.
- *
- * ---
- * ## How to call methods
- *
- * These are 2 equal ways to call a Handsontable method:
- *
- * @example
- * ```js
- * // all following examples assume that you constructed Handsontable like this
- * var exampleContainer1 = document.getElementById('example1');
- * var ht = new Handsontable(exampleContainer1, options);
- *
- * // now, to use setDataAtCell method, you can either:
- * ht.setDataAtCell(0, 0, 'new value');
- * ```
- *
- * Alternatively, you can call the method using jQuery wrapper (__obsolete__, requires initialization using our jQuery guide
- * @example
- * ```js
- *   $('#example1').handsontable('setDataAtCell', 0, 0, 'new value');
- * ```
- * ---
  */
 Handsontable.Core = function (rootElement, userSettings) {
   var priv
@@ -314,7 +291,6 @@ Handsontable.Core = function (rootElement, userSettings) {
   grid = {
     /**
      * Inserts or removes rows and columns
-     *
      * @param {String} action Possible values: "insert_row", "insert_col", "remove_row", "remove_col"
      * @param {Number} index
      * @param {Number} amount
@@ -370,12 +346,6 @@ Handsontable.Core = function (rootElement, userSettings) {
 
           datamap.removeRow(index, amount);
           priv.cellSettings.splice(index, amount);
-
-          var fixedRowsTop = instance.getSettings().fixedRowsTop;
-          if (fixedRowsTop >= index + 1) {
-            instance.getSettings().fixedRowsTop -= Math.min(amount, fixedRowsTop - index);
-          }
-
           grid.adjustRowsAndCols();
           selection.refreshBorders(); //it will call render and prepare methods
           break;
@@ -387,11 +357,6 @@ Handsontable.Core = function (rootElement, userSettings) {
             if(row in priv.cellSettings){  //if row hasn't been rendered it wouldn't have cellSettings
               priv.cellSettings[row].splice(index, amount);
             }
-          }
-
-          var fixedColumnsLeft = instance.getSettings().fixedColumnsLeft;
-          if (fixedColumnsLeft >= index + 1) {
-            instance.getSettings().fixedColumnsLeft -= Math.min(amount, fixedColumnsLeft - index);
           }
 
           if(Array.isArray(instance.getSettings().colHeaders)){
@@ -525,7 +490,6 @@ Handsontable.Core = function (rootElement, userSettings) {
 
     /**
      * Populate cells at position with 2d array
-     *
      * @param {Object} start Start selection position
      * @param {Array} input 2d array
      * @param {Object} [end] End selection position (only for drag-down mode)
@@ -533,7 +497,7 @@ Handsontable.Core = function (rootElement, userSettings) {
      * @param {String} [method="overwrite"]
      * @param {String} direction (left|right|up|down)
      * @param {Array} deltas array
-     * @returns {Object|undefined} ending td in pasted area (only if any cell was changed)
+     * @return {Object|undefined} ending td in pasted area (only if any cell was changed)
      */
     populateFromArray: function (start, input, end, source, method, direction, deltas) {
       var r, rlen, c, clen, setData = [], current = {};
@@ -690,24 +654,20 @@ Handsontable.Core = function (rootElement, userSettings) {
       rows: false
     },
 
-    /**
-     * @param {Number} rows
-     * @param {Number} cols
-     */
     setSelectedHeaders: function (rows, cols) {
       instance.selection.selectedHeader.rows = rows;
       instance.selection.selectedHeader.cols = cols;
     },
 
     /**
-     * Sets inProgress to `true`. This enables onSelectionEnd and onSelectionEndByProp to function as desired.
+     * Sets inProgress to true. This enables onSelectionEnd and onSelectionEndByProp to function as desired
      */
     begin: function () {
       instance.selection.inProgress = true;
     },
 
     /**
-     * Sets inProgress to `false`. Triggers onSelectionEnd and onSelectionEndByProp.
+     * Sets inProgress to false. Triggers onSelectionEnd and onSelectionEndByProp
      */
     finish: function () {
       var sel = instance.getSelected();
@@ -716,16 +676,12 @@ Handsontable.Core = function (rootElement, userSettings) {
       instance.selection.inProgress = false;
     },
 
-    /**
-     * @returns {Boolean}
-     */
     isInProgress: function () {
       return instance.selection.inProgress;
     },
 
     /**
-     * Starts selection range on given td object.
-     *
+     * Starts selection range on given td object
      * @param {WalkontableCellCoords} coords
      */
     setRangeStart: function (coords, keepEditorOpened) {
@@ -735,10 +691,9 @@ Handsontable.Core = function (rootElement, userSettings) {
     },
 
     /**
-     * Ends selection range on given td object.
-     *
+     * Ends selection range on given td object
      * @param {WalkontableCellCoords} coords
-     * @param {Boolean} [scrollToCell=true] If `true`, viewport will be scrolled to range end
+     * @param {Boolean} [scrollToCell=true] If true, viewport will be scrolled to range end
      */
     setRangeEnd: function (coords, scrollToCell, keepEditorOpened) {
       //trigger handlers
@@ -776,7 +731,7 @@ Handsontable.Core = function (rootElement, userSettings) {
         priv.selRange.from.row, datamap.colToProp(priv.selRange.from.col), priv.selRange.to.row, datamap.colToProp(priv.selRange.to.col));
 
       if (scrollToCell !== false && instance.view.mainViewIsActive()) {
-        if (priv.selRange.from && !selection.isMultiple()) {
+        if(priv.selRange.from) {
           instance.view.scrollViewport(priv.selRange.from);
         } else {
           instance.view.scrollViewport(coords);
@@ -787,8 +742,7 @@ Handsontable.Core = function (rootElement, userSettings) {
     },
 
     /**
-     * Destroys editor, redraws borders around cells, prepares editor.
-     *
+     * Destroys editor, redraws borders around cells, prepares editor
      * @param {Boolean} revertOriginal
      * @param {Boolean} keepEditor
      */
@@ -803,9 +757,8 @@ Handsontable.Core = function (rootElement, userSettings) {
     },
 
     /**
-     * Returns information if we have a multiselection.
-     *
-     * @returns {Boolean}
+     * Returns information if we have a multiselection
+     * @return {Boolean}
      */
     isMultiple: function () {
       var isMultiple = !(priv.selRange.to.col === priv.selRange.from.col && priv.selRange.to.row === priv.selRange.from.row)
@@ -817,7 +770,7 @@ Handsontable.Core = function (rootElement, userSettings) {
     },
 
     /**
-     * Selects cell relative to current cell (if possible).
+     * Selects cell relative to current cell (if possible)
      */
     transformStart: function (rowDelta, colDelta, force, keepEditorOpened) {
       var delta = new WalkontableCellCoords(rowDelta, colDelta);
@@ -875,7 +828,7 @@ Handsontable.Core = function (rootElement, userSettings) {
     },
 
     /**
-     * Sets selection end cell relative to current selection end cell (if possible).
+     * Sets selection end cell relative to current selection end cell (if possible)
      */
     transformEnd: function (rowDelta, colDelta) {
       var delta = new WalkontableCellCoords(rowDelta, colDelta);
@@ -899,23 +852,21 @@ Handsontable.Core = function (rootElement, userSettings) {
           coords.col = totalCols - 1;
         }
 
-        selection.setRangeEnd(coords, true);
+        selection.setRangeEnd(coords);
     },
 
     /**
-     * Returns `true` if currently there is a selection on screen, `false` otherwise.
-     *
-     * @returns {Boolean}
+     * Returns true if currently there is a selection on screen, false otherwise
+     * @return {Boolean}
      */
     isSelected: function () {
       return (priv.selRange !== null);
     },
 
     /**
-     * Returns `true` if coords is within current selection coords.
-     *
+     * Returns true if coords is within current selection coords
      * @param {WalkontableCellCoords} coords
-     * @returns {Boolean}
+     * @return {Boolean}
      */
     inInSelection: function (coords) {
       if (!selection.isSelected()) {
@@ -1097,8 +1048,6 @@ Handsontable.Core = function (rootElement, userSettings) {
 
   /**
    * Internal function to apply changes. Called after validateChanges
-   *
-   * @private
    * @param {Array} changes Array in form of [row, prop, oldValue, newValue]
    * @param {String} source String that identifies how this change will be described in changes array (useful in onChange callback)
    */
@@ -1144,17 +1093,6 @@ Handsontable.Core = function (rootElement, userSettings) {
   this.validateCell = function (value, cellProperties, callback, source) {
     var validator = instance.getCellValidator(cellProperties);
 
-    function done(valid) {
-      var col = cellProperties.col,
-        row = cellProperties.row,
-        td = instance.getCell(row, col, true);
-
-      if (td) {
-        instance.view.wt.wtSettings.settings.cellRenderer(row, col, td);
-      }
-      callback(valid);
-    }
-
     if (Object.prototype.toString.call(validator) === '[object RegExp]') {
       validator = (function (validator) {
         return function (value, callback) {
@@ -1173,7 +1111,7 @@ Handsontable.Core = function (rootElement, userSettings) {
           valid = Handsontable.hooks.run(instance, "afterValidate", valid, value, cellProperties.row, cellProperties.prop, source);
           cellProperties.valid = valid;
 
-          done(valid);
+          callback(valid);
           Handsontable.hooks.run(instance, "postAfterValidate", valid, value, cellProperties.row, cellProperties.prop, source);
         });
       }, 0));
@@ -1181,7 +1119,7 @@ Handsontable.Core = function (rootElement, userSettings) {
     } else {
       //resolve callback even if validator function was not found
       cellProperties.valid = true;
-      done(cellProperties.valid);
+      callback(true);
     }
   };
 
@@ -1197,16 +1135,12 @@ Handsontable.Core = function (rootElement, userSettings) {
   }
 
   /**
-   * @description
-   * Set new value to a cell. To change many cells at once, pass an array of `changes` in format `[[row, col, value], ...]` as
-   * the only parameter. `col` is the index of __visible__ column (note that if columns were reordered,
-   * the current order will be used). `source` is a flag for before/afterChange events. If you pass only array of
-   * changes then `source` could be set as second parameter.
-   *
-   * @param {Number|Array} row or array of changes in format `[[row, col, value], ...]`
+   * Set data at given cell
+   * @public
+   * @param {Number|Array} row or array of changes in format [[row, col, value], ...]
    * @param {Number|String} col or source String
    * @param {String} value
-   * @param {String} [source] String that identifies how this change will be described in changes array (useful in onChange callback)
+   * @param {String} source String that identifies how this change will be described in changes array (useful in onChange callback)
    */
   this.setDataAtCell = function (row, col, value, source) {
     var input = setDataInputToArray(row, col, value)
@@ -1242,12 +1176,12 @@ Handsontable.Core = function (rootElement, userSettings) {
 
 
   /**
-   * Same as above, except instead of `col`, you provide name of the object property (e.g. `[0, 'first.name', 'Jennifer']`).
-   *
-   * @param {Number|Array} row or array of changes in format `[[row, prop, value], ...]`
+   * Set data at given row property
+   * @public
+   * @param {Number|Array} row or array of changes in format [[row, prop, value], ...]
    * @param {String} prop or source String
    * @param {String} value
-   * @param {String} [source] String that identifies how this change will be described in changes array (useful in onChange callback)
+   * @param {String} source String that identifies how this change will be described in changes array (useful in onChange callback)
    */
   this.setDataAtRowProp = function (row, prop, value, source) {
     var input = setDataInputToArray(row, prop, value)
@@ -1274,9 +1208,7 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Listen to keyboard input on document body.
-   *
-   * @since 0.11
+   * Listen to document body keyboard input
    */
   this.listen = function () {
     Handsontable.activeGuid = instance.guid;
@@ -1290,51 +1222,39 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Stop listening to keyboard input on document body.
-   *
-   * @since 0.11
+   * Stop listening to document body keyboard input
    */
   this.unlisten = function () {
     Handsontable.activeGuid = null;
   };
 
   /**
-   * Returns `true` if current Handsontable instance is listening to keyboard input on document body.
-   *
-   * @since 0.11
-   * @returns {Boolean}
+   * Returns true if current Handsontable instance is listening on document body keyboard input
    */
   this.isListening = function () {
     return Handsontable.activeGuid === instance.guid;
   };
 
   /**
-   * Destroys current editor, renders and selects current cell.
-   *
-   * @param {Boolean} [revertOriginal] If != `true`, edited data is saved. Otherwise previous value is restored
+   * Destroys current editor, renders and selects current cell. If revertOriginal != true, edited data is saved
+   * @param {Boolean} revertOriginal
    */
   this.destroyEditor = function (revertOriginal) {
     selection.refreshBorders(revertOriginal);
   };
 
   /**
-   * Populate cells at position with 2D input array (e.g. `[[1, 2], [3, 4]]`).
-   * Use `endRow`, `endCol` when you want to cut input when certain row is reached.
-   * Optional `source` parameter (default value "populateFromArray") is used to identify this call in the resulting events (beforeChange, afterChange).
-   * Optional `populateMethod` parameter (default value "overwrite", possible values "shift_down" and "shift_right")
-   * has the same effect as pasteMethod option (see Options page)
-   *
-   * @since 0.9.0
+   * Populate cells at position with 2d array
    * @param {Number} row Start row
    * @param {Number} col Start column
    * @param {Array} input 2d array
-   * @param {Number} [endRow] End row (use when you want to cut input when certain row is reached)
-   * @param {Number} [endCol] End column (use when you want to cut input when certain column is reached)
-   * @param {String} [source="populateFromArray"]
-   * @param {String} [method="overwrite"]
+   * @param {Number=} endRow End row (use when you want to cut input when certain row is reached)
+   * @param {Number=} endCol End column (use when you want to cut input when certain column is reached)
+   * @param {String=} [source="populateFromArray"]
+   * @param {String=} [method="overwrite"]
    * @param {String} direction edit (left|right|up|down)
    * @param {Array} deltas array
-   * @returns {Object|undefined} ending td in pasted area (only if any cell was changed)
+   * @return {Object|undefined} ending td in pasted area (only if any cell was changed)
    */
   this.populateFromArray = function (row, col, input, endRow, endCol, source, method, direction, deltas) {
     var c;
@@ -1348,49 +1268,31 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Adds/removes data from the column. This function works is modelled after Array.splice.
-   * Parameter `col` is the index of column in which do you want to do splice.
-   * Parameter `index` is the row index at which to start changing the array.
-   * If negative, will begin that many elements from the end. Parameter `amount`, is the number of old array elements to remove.
-   * If the amount is 0, no elements are removed. Fourth and further parameters are the `elements` to add to the array.
-   * If you don't specify any elements, spliceCol simply removes elements from the array.
-   * {@link Handsontable.DataMap#spliceCol}
-   *
-   * @since 0.9-beta2
+   * Adds/removes data from the column
    * @param {Number} col Index of column in which do you want to do splice.
    * @param {Number} index Index at which to start changing the array. If negative, will begin that many elements from the end
    * @param {Number} amount An integer indicating the number of old array elements to remove. If amount is 0, no elements are removed
-   * @param {*} [elements] The elements to add to the array. If you don't specify any elements, spliceCol simply removes elements from the array
+   * param {...*} elements Optional. The elements to add to the array. If you don't specify any elements, spliceCol simply removes elements from the array
    */
   this.spliceCol = function (col, index, amount/*, elements... */) {
     return datamap.spliceCol.apply(datamap, arguments);
   };
 
   /**
-   * Adds/removes data from the row. This function works is modelled after Array.splice.
-   * Parameter `row` is the index of row in which do you want to do splice.
-   * Parameter `index` is the column index at which to start changing the array.
-   * If negative, will begin that many elements from the end. Parameter `amount`, is the number of old array elements to remove.
-   * If the amount is 0, no elements are removed. Fourth and further parameters are the `elements` to add to the array.
-   * If you don't specify any elements, spliceCol simply removes elements from the array.
-   * {@link Handsontable.DataMap#spliceRow}
-   *
-   * @since 0.11
+   * Adds/removes data from the row
    * @param {Number} row Index of column in which do you want to do splice.
    * @param {Number} index Index at which to start changing the array. If negative, will begin that many elements from the end
    * @param {Number} amount An integer indicating the number of old array elements to remove. If amount is 0, no elements are removed
-   * @param {*} [elements] The elements to add to the array. If you don't specify any elements, spliceCol simply removes elements from the array
+   * param {...*} elements Optional. The elements to add to the array. If you don't specify any elements, spliceCol simply removes elements from the array
    */
   this.spliceRow = function (row, index, amount/*, elements... */) {
     return datamap.spliceRow.apply(datamap, arguments);
   };
 
   /**
-   * Return index of the currently selected cells as an array `[startRow, startCol, endRow, endCol]`.
-   *
-   * Start row and start col are the coordinates of the active cell (where the selection was started).
-   *
-   * @returns {Array}
+   * Returns current selection. Returns undefined if there is no selection.
+   * @public
+   * @return {Array} [`startRow`, `startCol`, `endRow`, `endCol`]
    */
   this.getSelected = function () { //https://github.com/handsontable/handsontable/issues/44  //cjl
     if (selection.isSelected()) {
@@ -1399,10 +1301,9 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns current selection as a WalkontableCellRange object.
-   *
-   * @since 0.11
-   * @returns {WalkontableCellRange} Returns `undefined` if there is no selection.
+   * Returns current selection as a WalkontableCellRange object. Returns undefined if there is no selection.
+   * @public
+   * @return {WalkontableCellRange}
    */
   this.getSelectedRange = function () { //https://github.com/handsontable/handsontable/issues/44  //cjl
     if (selection.isSelected()) {
@@ -1412,7 +1313,8 @@ Handsontable.Core = function (rootElement, userSettings) {
 
 
   /**
-   * Rerender the table.
+   * Render visible data
+   * @public
    */
   this.render = function () {
     if (instance.view) {
@@ -1422,8 +1324,8 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Reset all cells in the grid to contain data from the data array.
-   *
+   * Load data from array
+   * @public
    * @param {Array} data
    */
   this.loadData = function (data) {
@@ -1486,14 +1388,14 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Return the current data object (the same that was passed by `data` configuration option or `loadData` method).
-   * Optionally you can provide cell range `row`, `col`, `row2`, `col2` to get only a fragment of grid data.
-   *
-   * @param {Number} [r] From row
-   * @param {Number} [c] From col
-   * @param {Number} [r2] To row
-   * @param {Number} [c2] To col
-   * @returns {Array|Object}
+   * Return the current data object (the same that was passed by `data` configuration option
+   * or `loadData` method). Optionally you can provide cell range `r`, `c`, `r2`, `c2` to get only a fragment of grid data
+   * @public
+   * @param {Number} r (Optional) From row
+   * @param {Number} c (Optional) From col
+   * @param {Number} r2 (Optional) To row
+   * @param {Number} c2 (Optional) To col
+   * @return {Array|Object}
    */
   this.getData = function (r, c, r2, c2) {
     if (typeof r === 'undefined') {
@@ -1503,26 +1405,13 @@ Handsontable.Core = function (rootElement, userSettings) {
     }
   };
 
-  /**
-   * Get value of selected range. Each column is separated by tab, each row is separated by new line character.
-   * {@link Handsontable.DataMap#getCopyableText}
-   *
-   * @since 0.11
-   * @param {Number} startRow From row
-   * @param {Number} startCol From col
-   * @param {Number} endRow To row
-   * @param {Number} endCol To col
-   * @returns {Array|Object}
-   */
   this.getCopyableData = function (startRow, startCol, endRow, endCol) {
     return datamap.getCopyableText(new WalkontableCellCoords(startRow, startCol), new WalkontableCellCoords(endRow, endCol));
   };
 
   /**
-   * Use it if you need to change configuration after initialization.
-   *
-   * @param {Object} settings Settings to update
-   * @param {Boolean} init
+   * Update settings
+   * @public
    */
   this.updateSettings = function (settings, init) {
     var i, clen;
@@ -1646,12 +1535,6 @@ Handsontable.Core = function (rootElement, userSettings) {
     }
   };
 
-  /**
-   * Get value from selected cell.
-   *
-   * @since 0.11
-   * @returns {*} Returns value of selected cell
-   */
   this.getValue = function () {
     var sel = instance.getSelected();
     if (GridSettings.prototype.getValue) {
@@ -1698,18 +1581,16 @@ Handsontable.Core = function (rootElement, userSettings) {
   }
 
   /**
-   * Get object settings.
-   *
-   * @returns {Object} Returns an object containing the current grid settings
+   * Returns current settings object
+   * @return {Object}
    */
   this.getSettings = function () {
     return priv.settings;
   };
 
   /**
-   * Clears grid.
-   *
-   * @since 0.11
+   * Clears grid
+   * @public
    */
   this.clear = function () {
     selection.selectAll();
@@ -1717,123 +1598,86 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Inserts or removes rows and columns.
-   *
-   * @param {String} action See grid.alter for possible values: `"insert_row"`, `"insert_col"`, `"remove_row"`, `"remove_col"`
+   * Inserts or removes rows and columns
+   * @param {String} action See grid.alter for possible values
    * @param {Number} index
    * @param {Number} amount
-   * @param {String} [source] Source of hook runner
-   * @param {Boolean} [keepEmptyRows] Flag for preventing deletion of empty rows
-   *
-   * @example
-   * Insert new row(s) above the row at given `index`. If index is `null` or `undefined`, the new row will be
-   * added after the current last row. Default `amount` equals 1.
-   * ```js
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer);
-   * hot.alter('insert_row', 10);
-   * ```
-   *
-   * Insert new column(s) before the column at given `index`. If index is `null` or `undefined`, the new column
-   * will be added after the current last column. Default `amount` equals 1
-   * ```js
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer);
-   * hot.alter('insert_col', 10);
-   * ```
-   *
-   * Remove the row(s) at given `index`. Default `amount` equals 1
-   * ```js
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer);
-   * hot.alter('remove_row', 10);
-   * ```
-   *
-   * Remove the column(s) at given `index`. Default `amount` equals 1
-   * ```js
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer);
-   * hot.alter('remove_col', 10);
-   * ```
+   * @param {String} [source] Optional. Source of hook runner.
+   * @param {Boolean} [keepEmptyRows] Optional. Flag for preventing deletion of empty rows.
+   * @public
    */
   this.alter = function (action, index, amount, source, keepEmptyRows) {
     grid.alter(action, index, amount, source, keepEmptyRows);
   };
 
   /**
-   * Returns TD element for given `row`, `col` if it is rendered on screen.
-   * Returns `null` if the TD is not rendered on screen (probably because that part of table is not visible).
-   *
+   * Returns <td> element corresponding to params row, col
    * @param {Number} row
    * @param {Number} col
    * @param {Boolean} topmost
-   * @returns {Element}
+   * @public
+   * @return {Element}
    */
   this.getCell = function (row, col, topmost) {
     return instance.view.getCellAtCoords(new WalkontableCellCoords(row, col), topmost);
   };
 
   /**
-   * Returns coordinates for the provided element.
-   *
-   * @param {Element} elem
-   * @returns {WalkontableCellCoords}
+   * Returns coordinates for the provided element
+   * @param elem
+   * @returns {WalkontableCellCoords|*}
    */
   this.getCoords = function(elem) {
     return this.view.wt.wtTable.getCoords.call(this.view.wt.wtTable, elem);
   };
 
   /**
-   * Returns property name that corresponds with the given column index. {@link Handsontable.DataMap#colToProp}
-   *
-   * @param {Number} col Column index
-   * @returns {String}
+   * Returns property name associated with column number
+   * @param {Number} col
+   * @public
+   * @return {String}
    */
   this.colToProp = function (col) {
     return datamap.colToProp(col);
   };
 
   /**
-   * Returns column index that corresponds with the given property. {@link Handsontable.DataMap#propToCol}
-   *
+   * Returns column number associated with property name
    * @param {String} prop
-   * @returns {Number}
+   * @public
+   * @return {Number}
    */
   this.propToCol = function (prop) {
     return datamap.propToCol(prop);
   };
 
   /**
-   * @description
-   * Return cell value at `row`, `col`. `row` and `col` are the __visible__ indexes (note that if columns were reordered or sorted,
-   * the current order will be used).
-   *
+   * Return value at `row`, `col`
    * @param {Number} row
    * @param {Number} col
-   * @returns {*}
+   * @public
+   * @return value (mixed data type)
    */
   this.getDataAtCell = function (row, col) {
     return datamap.get(row, datamap.colToProp(col));
   };
 
   /**
-   * Return value at `row`, `prop`. {@link Handsontable.DataMap#get}
-   *
+   * Return value at `row`, `prop`
    * @param {Number} row
    * @param {String} prop
-   * @returns {*}
+   * @public
+   * @return value (mixed data type)
    */
   this.getDataAtRowProp = function (row, prop) {
     return datamap.get(row, prop);
   };
 
   /**
-   * @description
-   * Returns array of column values from the data source. `col` is the __visible__ index of the column.
-   *
-   * @since 0.9-beta2
+   * Return value at `col`, where `col` is the visible index of the column
    * @param {Number} col
-   * @returns {Array}
+   * @public
+   * @return {Array} value (mixed data type)
    */
   this.getDataAtCol = function (col) {
     var out = [];
@@ -1841,11 +1685,10 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Given the object property name (e.g. `'first.name'`), returns array of column values from the data source.
-   *
-   * @since 0.9-beta2
+   * Return value at `prop`
    * @param {String} prop
-   * @returns {Array} {*}
+   * @public
+   * @return {Array} value (mixed data type)
    */
   this.getDataAtProp = function (prop) {
     var out = [],
@@ -1860,11 +1703,10 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns array of column values from the data source. `col` is the index of the row in the data source.
-   *
-   * @since 0.11.0-beta3
+   * Return original source values at 'col'
    * @param {Number} col
-   * @returns {Array}
+   * @public
+   * @returns value (mixed data type)
    */
   this.getSourceDataAtCol = function (col) {
     var out = [],
@@ -1878,32 +1720,28 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns a single row of the data (array or object, depending on what you have). `row` is the index of the row in the data source.
-   *
-   * @since 0.11.0-beta3
+   * Return original source values at 'row'
    * @param {Number} row
-   * @returns {Array|Object}
+   * @public
+   * @returns value {mixed data type}
    */
   this.getSourceDataAtRow = function (row) {
     return priv.settings.data[row];
   };
 
   /**
-   * @description
-   * Returns a single row of the data (array or object, depending on what you have). `row` is the __visible__ index of the row.
-   *
+   * Return value at `row`
    * @param {Number} row
-   * @returns {*}
-   * @since 0.9-beta2
+   * @public
+   * @return value (mixed data type)
    */
   this.getDataAtRow = function (row) {
     var data = datamap.getRange(new WalkontableCellCoords(row, 0), new WalkontableCellCoords(row, this.countCols() - 1), datamap.DESTINATION_RENDERER);
     return data[0];
   };
 
-  /**
-   * Remove `key` property object from cell meta data corresponding to params `row`, `col`.
-   *
+  /***
+   *  Remove "key" property object from cell meta data corresponding to params row,col
    * @param {Number} row
    * @param {Number} col
    * @param {String} key
@@ -1918,9 +1756,7 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Set cell meta data object `prop` to corresponding params `row`, `col`
-   *
-   * @since 0.11
+   * Set cell meta data object to corresponding params row, col
    * @param {Number} row
    * @param {Number} col
    * @param {Object} prop
@@ -1936,13 +1772,12 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Sets cell meta data object `key` corresponding to params `row`, `col`.
-   *
-   * @since 0.11
+   * Sets cell meta data object "key" corresponding to params row, col
    * @param {Number} row
    * @param {Number} col
    * @param {String} key
    * @param {String} val
+   *
    */
   this.setCellMeta = function (row, col, key, val) {
     if (!priv.cellSettings[row]) {
@@ -1956,11 +1791,11 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Return cell properties for given `row`, `col` coordinates.
-   *
+   * Returns cell meta data object corresponding to params row, col
    * @param {Number} row
    * @param {Number} col
-   * @returns {Object}
+   * @public
+   * @return {Object}
    */
   this.getCellMeta = function (row, col) {
     var prop = datamap.colToProp(col)
@@ -2007,9 +1842,8 @@ Handsontable.Core = function (rootElement, userSettings) {
   /**
    * If displayed rows order is different than the order of rows stored in memory (i.e. sorting is applied)
    * we need to translate logical (stored) row index to physical (displayed) index.
-   *
-   * @param {Number} row Original row index
-   * @returns {Number} Translated row index
+   * @param row - original row index
+   * @returns {int} translated row index
    */
   function translateRowIndex(row){
     return Handsontable.hooks.run(instance, 'modifyRow', row);
@@ -2018,10 +1852,8 @@ Handsontable.Core = function (rootElement, userSettings) {
   /**
    * If displayed columns order is different than the order of columns stored in memory (i.e. column were moved using manualColumnMove plugin)
    * we need to translate logical (stored) column index to physical (displayed) index.
-   *
-   * @private
-   * @param {Number} col Original column index
-   * @returns {Number} Translated column index
+   * @param col - original column index
+   * @returns {int} - translated column index
    */
   function translateColIndex(col){
     // warning: this must be done after datamap.colToProp
@@ -2029,19 +1861,10 @@ Handsontable.Core = function (rootElement, userSettings) {
   }
 
   var rendererLookup = Handsontable.helper.cellMethodLookupFactory('renderer');
-
-  /**
-   * Get rederer type by `row` and `col`.
-   *
-   * @since 0.11
-   * @param {Number} row
-   * @param {Number} col
-   * @returns {Function} Returns rederer type
-   */
   this.getCellRenderer = function (row, col) {
     var renderer = rendererLookup.call(this, row, col);
-
     return Handsontable.renderers.getRenderer(renderer);
+
   };
 
   this.getCellEditor = Handsontable.helper.cellMethodLookupFactory('editor');
@@ -2050,9 +1873,8 @@ Handsontable.Core = function (rootElement, userSettings) {
 
 
   /**
-   * Validates all cells using their validator functions and calls callback when finished. Does not render the view.
-   *
-   * @param {Function} callback
+   * Validates all cells using their validator functions and calls callback when finished. Does not render the view
+   * @param callback
    */
   this.validateCells = function (callback) {
     var waitingForValidator = new ValidatorsQueue();
@@ -2076,10 +1898,9 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns array of row headers (if they are enabled). If param `row` given, return header at given row as string.
-   *
-   * @param {Number} [row]
-   * @returns {Array|String}
+   * Return array of row headers (if they are enabled). If param `row` given, return header at given row as string
+   * @param {Number} row (Optional)
+   * @return {Array|String}
    */
   this.getRowHeader = function (row) {
     if (row === void 0) {
@@ -2104,20 +1925,16 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns information of this table is configured to display row headers.
-   *
-   * @returns {Boolean}
-   * @since 0.11
+   * Returns information of this table is configured to display row headers
+   * @returns {boolean}
    */
   this.hasRowHeaders = function () {
     return !!priv.settings.rowHeaders;
   };
 
   /**
-   * Returns information of this table is configured to display column headers.
-   *
-   * @since 0.11
-   * @returns {Boolean}
+   * Returns information of this table is configured to display column headers
+   * @returns {boolean}
    */
   this.hasColHeaders = function () {
     if (priv.settings.colHeaders !== void 0 && priv.settings.colHeaders !== null) { //Polymer has empty value = null
@@ -2133,9 +1950,8 @@ Handsontable.Core = function (rootElement, userSettings) {
 
   /**
    * Return array of column headers (if they are enabled). If param `col` given, return header at given column as string
-   *
-   * @param {Number} [col] Column index
-   * @returns {Array|String}
+   * @param {Number} col (Optional)
+   * @return {Array|String}
    */
   this.getColHeader = function (col) {
     if (col === void 0) {
@@ -2169,16 +1985,13 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Return column width from settings (no guessing). Private use intended.
-   *
-   * @private
+   * Return column width from settings (no guessing). Private use intended
    * @param {Number} col
-   * @returns {Number}
+   * @return {Number}
    */
   this._getColWidthFromSettings = function (col) {
     var cellProperties = instance.getCellMeta(0, col);
     var width = cellProperties.width;
-
     if (width === void 0 || width === priv.settings.width) {
       width = cellProperties.colWidths;
     }
@@ -2196,16 +2009,13 @@ Handsontable.Core = function (rootElement, userSettings) {
         width = parseInt(width, 10);
       }
     }
-
     return width;
   };
 
   /**
    * Return column width
-   *
-   * @since 0.11
    * @param {Number} col
-   * @returns {Number}
+   * @return {Number}
    */
   this.getColWidth = function (col) {
     var width = instance._getColWidthFromSettings(col);
@@ -2219,11 +2029,9 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Return row height from settings (no guessing). Private use intended.
-   *
-   * @private
+   * Return row height from settings (no guessing). Private use intended
    * @param {Number} row
-   * @returns {Number}
+   * @return {Number}
    */
   this._getRowHeightFromSettings= function (row) {
     /* inefficient
@@ -2234,7 +2042,6 @@ Handsontable.Core = function (rootElement, userSettings) {
     }
     */
     var height = priv.settings.rowHeights; //only uses grid settings
-
     if (height !== void 0 && height !== null) {
       switch (typeof height) {
         case 'object': //array
@@ -2249,16 +2056,13 @@ Handsontable.Core = function (rootElement, userSettings) {
         height = parseInt(height, 10);
       }
     }
-
     return height;
   };
 
   /**
-   * Return row height.
-   *
+   * Return row height
    * @param {Number} row
-   * @returns {Number}
-   * @since 0.11
+   * @return {Number}
    */
   this.getRowHeight = function (row) {
     var height = instance._getRowHeightFromSettings(row);
@@ -2269,18 +2073,16 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns total number of rows in the grid.
-   *
-   * @returns {Number} Total number in rows the grid
+   * Return total number of rows in grid
+   * @return {Number}
    */
   this.countRows = function () {
     return priv.settings.data.length;
   };
 
   /**
-   * Returns total number of columns in the grid.
-   *
-   * @returns {Number} Total number of columns
+   * Return total number of columns in grid
+   * @return {Number}
    */
   this.countCols = function () {
     if (instance.dataType === 'object' || instance.dataType === 'function') {
@@ -2305,45 +2107,40 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Get index of first visible row.
-   *
-   * @returns {Number} Returns index of first visible row
+   * Return index of first rendered row
+   * @return {Number}
    */
   this.rowOffset = function () {
     return instance.view.wt.wtTable.getFirstRenderedRow();
   };
 
   /**
-   * Get index of first visible column.
-   *
-   * @returns {Number} Return index of first visible column.
+   * Return index of first visible column
+   * @return {Number}
    */
   this.colOffset = function () {
     return instance.view.wt.wtTable.getFirstRenderedColumn();
   };
 
   /**
-   * Return number of rendered rows (including rows partially or fully rendered outside viewport).
-   *
-   * @returns {Number} Returns -1 if table is not visible
+   * Return number of rendered rows (including rows partially or fully rendered outside viewport). Returns -1 if table is not visible
+   * @return {Number}
    */
   this.countRenderedRows = function () {
     return instance.view.wt.drawn ? instance.view.wt.wtTable.getRenderedRowsCount() : -1;
   };
 
   /**
-   * Return number of visible rows (rendered rows that fully fit inside viewport).
-   *
-   * @returns {Number} Returns -1 if table is not visible
+   * Return number of visible rows (rendered rows that fully fit inside viewport)). Returns -1 if table is not visible
+   * @return {Number}
    */
   this.countVisibleRows = function () {
     return instance.view.wt.drawn ? instance.view.wt.wtTable.getVisibleRowsCount() : -1;
   };
 
   /**
-   * Return number of visible columns.
-   *
-   * @returns {Number} Returns -1 if table is not visible
+   * Return number of rendered columns (including columns partially or fully rendered outside viewport). Returns -1 if table is not visible
+   * @return {Number}
    */
   this.countRenderedCols = function () {
     return instance.view.wt.drawn ? instance.view.wt.wtTable.getRenderedColumnsCount() : -1;
@@ -2358,11 +2155,8 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns number of empty rows. If the optional ending parameter is 1, returns
-   * number of empty rows at the bottom of the table.
-   *
-   * @param {Boolean} [ending] If `true`, will only count empty rows at the end of the data source
-   * @returns {Number} Count empty rows
+   * Return number of empty rows
+   * @return {Boolean} ending If true, will only count empty rows at the end of the data source
    */
   this.countEmptyRows = function (ending) {
     var i = instance.countRows() - 1
@@ -2382,11 +2176,8 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Returns number of empty columns. If the optional `ending` parameter is `true`, returns number of empty
-   * columns at right hand edge of the table.
-   *
-   * @param {Boolean} [ending] If `true`, will only count empty columns at the end of the data source row
-   * @returns {Number} Count empty cols
+   * Return number of empty columns
+   * @return {Boolean} ending If true, will only count empty columns at the end of the data source row
    */
   this.countEmptyCols = function (ending) {
     if (instance.countRows() < 1) {
@@ -2408,34 +2199,32 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Check is `row` is empty.
-   *
-   * @param {Number} row Row index
-   * @returns {Boolean} Return `true` if the row at the given `row` is empty, `false` otherwise.
+   * Return true if the row at the given index is empty, false otherwise
+   * @param {Number} r Row index
+   * @return {Boolean}
    */
-  this.isEmptyRow = function (row) {
-    return priv.settings.isEmptyRow.call(instance, row);
+  this.isEmptyRow = function (r) {
+    return priv.settings.isEmptyRow.call(instance, r);
   };
 
   /**
-   * Check is `col` is empty.
-   *
-   * @param {Number} col Column index
-   * @returns {Boolean} Return `true` if the column at the given `col` is empty, `false` otherwise.
+   * Return true if the column at the given index is empty, false otherwise
+   * @param {Number} c Column index
+   * @return {Boolean}
    */
-  this.isEmptyCol = function (col) {
-    return priv.settings.isEmptyCol.call(instance, col);
+  this.isEmptyCol = function (c) {
+    return priv.settings.isEmptyCol.call(instance, c);
   };
 
   /**
-   * Select cell `row`, `col` or range finishing at `endRow`, `endCol`. By default, viewport will be scrolled to selection.
-   *
+   * Selects cell on grid. Optionally selects range to another cell
    * @param {Number} row
    * @param {Number} col
    * @param {Number} [endRow]
    * @param {Number} [endCol]
-   * @param {Boolean} [scrollToCell=true] If `true`, viewport will be scrolled to the selection
-   * @returns {Boolean}
+   * @param {Boolean} [scrollToCell=true] If true, viewport will be scrolled to the selection
+   * @public
+   * @return {Boolean}
    */
   this.selectCell = function (row, col, endRow, endCol, scrollToCell) {
     if (typeof row !== 'number' || row < 0 || row >= instance.countRows()) {
@@ -2469,16 +2258,6 @@ Handsontable.Core = function (rootElement, userSettings) {
     return true;
   };
 
-  /**
-   * Select cell `row`, `prop` or range finishing at `endRow`, `endProp`. By default, viewport will be scrolled to selection.
-   *
-   * @param {Number} row
-   * @param {Object} prop
-   * @param {Number} [endRow]
-   * @param {Object} [endProp]
-   * @param {Boolean} [scrollToCell=true] If `true`, viewport will be scrolled to the selection
-   * @returns {Boolean}
-   */
   this.selectCellByProp = function (row, prop, endRow, endProp, scrollToCell) {
     /* jshint ignore:start */
     arguments[1] = datamap.propToCol(arguments[1]);
@@ -2490,14 +2269,16 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Deselects current cell selection on grid.
+   * Deselects current sell selection on grid
+   * @public
    */
   this.deselectCell = function () {
     selection.deselect();
   };
 
   /**
-   * Remove grid from DOM.
+   * Remove grid from DOM
+   * @public
    */
   this.destroy = function () {
 
@@ -2542,17 +2323,14 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Replacement for all methods after Handsotnable was destroyed.
-   *
-   * @private
+   * Replacement for all methods after Handsotnable was destroyed
    */
   function postMortem() {
     throw new Error("This method cannot be called because this Handsontable instance has been destroyed");
   }
 
   /**
-   * Returns active editor object. {@link Handsontable.EditorManager#getActiveEditor}
-   *
+   * Returns active editor object
    * @returns {Object}
    */
   this.getActiveEditor = function(){
@@ -2560,55 +2338,26 @@ Handsontable.Core = function (rootElement, userSettings) {
   };
 
   /**
-   * Return Handsontable instance.
-   *
-   * @returns {Handsontable}
+   * Return Handsontable instance
+   * @public
+   * @return {Object}
    */
   this.getInstance = function () {
     return instance;
   };
 
-  /**
-   * {@link Handsontable.Hooks#add}
-   *
-   * @param {String} key
-   * @param {Function} fn
-   */
   this.addHook = function (key, fn) {
     Handsontable.hooks.add(key, fn, instance);
   };
 
-  /**
-   * {@link Handsontable.Hooks#once}
-   *
-   * @param {String} key
-   * @param {Function} fn
-   */
   this.addHookOnce = function (key, fn) {
     Handsontable.hooks.once(key, fn, instance);
   };
 
-  /**
-   * {@link Handsontable.Hooks#remove}
-   *
-   * @param {String} key
-   * @param {Function} fn
-   */
   this.removeHook = function (key, fn) {
     Handsontable.hooks.remove(key, fn, instance);
   };
 
-  /**
-   * {@link Handsontable.Hooks#run}
-   *
-   * @param {String} key
-   * @param {*} p1
-   * @param {*} p2
-   * @param {*} p3
-   * @param {*} p4
-   * @param {*} p5
-   * @param {*} p6
-   */
   this.runHooks = function (key, p1, p2, p3, p4, p5, p6) {
     return Handsontable.hooks.run(instance, key, p1, p2, p3, p4, p5, p6);
   };
@@ -2616,19 +2365,16 @@ Handsontable.Core = function (rootElement, userSettings) {
   this.timeouts = [];
 
   /**
-   * Sets timeout. Purpose of this method is to clear all known timeouts when `destroy` method is called.
-   *
-   * @param {*} handle
-   * @private
+   * Sets timeout. Purpose of this method is to clear all known timeouts when `destroy` method is called
+   * @public
    */
   this._registerTimeout = function (handle) {
     this.timeouts.push(handle);
   };
 
   /**
-   * Clears all known timeouts.
-   *
-   * @private
+   * Clears all known timeouts
+   * @public
    */
   this._clearTimeouts = function () {
     for(var i = 0, ilen = this.timeouts.length; i<ilen; i++) {
@@ -2638,936 +2384,96 @@ Handsontable.Core = function (rootElement, userSettings) {
 
   /**
    * Handsontable version
-   *
-   * @type {String}
    */
-  this.version = '0.13.0'; //inserted by grunt from package.json
+  this.version = '0.12.4'; //inserted by grunt from package.json
 };
 
-/**
- * @alias Handsontable.Options
- * @constructor
- * @description
-
- * ## Constructor options
- *
- * Constructor options are applied using an object literal passed as a first argument to the Handsontable constructor.
- *
- * @example
- * ```js
- * var exampleContainer = document.getElementById('example1');
- * var hot = new Handsontable(exampleContainer, {
- *   data: myArray,
- *   width: 400,
- *   height: 300
- * })
- * ```
- *
- * ---
- * ## Cascading configuration
- *
- * Handsontable 0.9 and newer is using *Cascading Configuration*, which is fast way to provide configuration options
- * for whole table, its columns and particular cells.
- *
- * Consider the following example:
- * ```js
- * var exampleContainer = document.getElementById('example');
- * var hot = new Handsontable(exampleContainer, {
- *   readOnly: true,
- *   columns: [
- *     {readOnly: false},
- *     {},
- *     {}
- *   ],
- *   cells: function (row, col, prop) {
- *     var cellProperties = {};
- *
- *     if (row === 0 && col === 0) {
- *       cellProperties.readOnly = true;
- *     }
- *
- *     return cellProperties;
- *   }
- * });
- * ```
- *
- * The above notation will result in all TDs being *read only*, except for first column TDs which will be *editable*, except for the TD in top left corner which will still be *read only*.
- *
- * ### The Cascading Configuration model
- *
- * ##### 1. Constructor
- *
- * Configuration options that are provided using first-level `handsontable(container, {option: "value"})` and `updateSettings` method.
- *
- * ##### 2. Columns
- *
- * Configuration options that are provided using second-level object `handsontable(container, {columns: {option: "value"}]})`
- *
- * ##### 3. Cells
- *
- * Configuration options that are provided using second-level function `handsontable(container, {cells: function: (row, col, prop){ }})`
- *
- * ---
- * ## Architecture performance
- *
- * The Cascading Configuration model is based on prototypical inheritance. It is much faster and memory efficient compared
- * to the previous model that used jQuery extend. See: http://jsperf.com/extending-settings.
- *
- * ---
- * __Important notice:__ In order for the data separation to work properly, make sure that each instance of Handsontable has a unique `id`.
- */
 var DefaultSettings = function () {};
 
 DefaultSettings.prototype = {
-  /**
-   * @description
-   * Initial data source that will be bound to the data grid __by reference__ (editing data grid alters the data source).
-   * Can be Array of Array, Array of Objects or Function.
-   *
-   * See [Understanding binding as reference](http://handsontable.com/demo/understanding_reference.html).
-   *
-   * @type {Array|Function}
-   * @default undefined
-   */
   data: void 0,
-
-  /**
-   * @description
-   * Defines the structure of a new row when data source is an object.
-   * Default like the first data row Array or Object.
-   *
-   *  See [demo/datasources.html](http://handsontable.com/demo/datasources.html) for examples.
-   *
-   * @type {Object}
-   * @default undefined
-   */
   dataSchema: void 0,
-
-  /**
-   * Width of the grid. Can be a number or a function that returns a number.
-   *
-   * @type {Number|Function}
-   * @default undefined
-   */
   width: void 0,
-
-  /**
-   * Height of the grid. Can be a number or a function that returns a number.
-   *
-   * @type {Number|Function}
-   * @default undefined
-   */
   height: void 0,
-
-  /**
-   * @description
-   * Initial number of rows.
-   *
-   * __Notice:__ This option only has effect in Handsontable constructor and only if `data` option is not provided
-   *
-   * @type {Number}
-   * @default 5
-   */
   startRows: 5,
-
-  /**
-   * @description
-   * Initial number of columns.
-   *
-   * __Notice:__ This option only has effect in Handsontable constructor and only if `data` option is not provided
-   *
-   * @type {Number}
-   * @default 5
-   */
   startCols: 5,
-
-  /**
-   * Setting `true` or `false` will enable or disable the default row headers (1, 2, 3).
-   * You can also define an array `['One', 'Two', 'Three', ...]` or a function to define the headers.
-   * If a function is set the index of the row is passed as a parameter.
-   *
-   * @type {Boolean|Array|Function}
-   * @default null
-   * @example
-   *  ...
-   *  // as boolean
-   *  rowHeaders: true,
-   *  ...
-   *
-   *  ...
-   *  // as array
-   *  rowHeaders: [1, 2, 3],
-   *  ...
-   *
-   *  ...
-   *  // as function
-   *  rowHeaders: function(index) {
-   *    return index + ': AB';
-   *  },
-   *  ...
-   */
   rowHeaders: null,
-
-  /**
-   * Setting `true` or `false` will enable or disable the default column headers (A, B, C).
-   * You can also define an array `['One', 'Two', 'Three', ...]` or a function to define the headers.
-   * If a function is set the index of the column is passed as a parameter.
-   *
-   * @type {Boolean|Array|Function}
-   * @default null
-   * @example
-   *  ...
-   *  // as boolean
-   *  colHeaders: true,
-   *  ...
-   *
-   *  ...
-   *  // as array
-   *  colHeaders: ['A', 'B', 'C'],
-   *  ...
-   *
-   *  ...
-   *  // as function
-   *  colHeaders: function(index) {
-   *    return index + ': AB';
-   *  },
-   *  ...
-   */
   colHeaders: null,
-
-  /**
-   * Defines column widths in pixels. Accepts number, string (that will be converted to number),
-   * array of numbers (if you want to define column width separately for each column) or a
-   * function (if you want to set column width dynamically on each render).
-   *
-   * @type {Array|Function|Number|String}
-   * @default undefined
-   */
   colWidths: void 0,
-
-  /**
-   * @description
-   * Defines the cell properties and data binding for certain columns.
-   *
-   * __Notice:__ Using this option sets a fixed number of columns (options `startCols`, `minCols`, `maxCols` will be ignored).
-   *
-   * See [demo/datasources.html](http://handsontable.com/demo/datasources.html) for examples.
-   *
-   * @type {Array}
-   * @default undefined
-   * @example
-   * ...
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer, {
-   *   columns: [
-   *     {
-   *       // column options for the first column
-   *       type: 'numeric',
-   *       format: '0,0.00 $'
-   *     },
-   *     {
-   *       // column options for the second column
-   *       type: 'text',
-   *       readOnly: true
-   *     }
-   *   ]
-   * });
-   * ...
-   */
   columns: void 0,
-
-  /**
-   * @description
-   * Defines the cell properties for given `row`, `col`, `prop` coordinates.
-   * Any constructor or column option may be overwritten for a particular cell (row/column combination), using `cell`
-   * array passed to the Handsontable constructor. Or using `cells` function property to the Handsontable constructor.
-   *
-   * @type {Function}
-   * @default undefined
-   * @example
-   * ```js
-   * ...
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer, {
-   *   cells: function (row, col, prop) {
-   *     var cellProperties = {};
-   *
-   *     if (row === 0 && col === 0) {
-   *       cellProperties.readOnly = true;
-   *     }
-   *
-   *     return cellProperties;
-   *   }
-   * });
-   * ...
-   * ```
-   */
   cells: void 0,
-
-  /**
-   * Any constructor or column option may be overwritten for a particular cell (row/column combination), using `cell`
-   * array passed to the Handsontable constructor.
-   *
-   * @type {Array}
-   * @default []
-   * @example
-   * ...
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer, {
-   *   cell: [
-   *     {row: 0, col: 0, readOnly: true}
-   *   ]
-   * });
-   * ...
-   */
   cell: [],
-
-  /**
-   * @description
-   * If `true`, enables Comments plugin, which enables applying cell comments through the context menu
-   * (configurable with context menu keys commentsAddEdit, commentsRemove).
-   *
-   * To initialize Handsontable with predefined comments, provide cell coordinates and comment texts in form of an array.
-   *
-   * See [Comments](http://handsontable.com/demo/comments.html) demo for examples.
-   *
-   * @since 0.11.0
-   * @type {Boolean|Array}
-   * @default false
-   * @example
-   * ...
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer, {
-   *   comments: [{row: 1, col: 1, comment: "Test comment"}]
-   * });
-   * ...
-   */
-  comments: false,
-
-  /**
-   * @description
-   * If `true`, enables Custom Borders plugin, which enables applying custom borders through the context menu (configurable with context menu key borders).
-   *
-   * To initialize Handsontable with predefined custom borders, provide cell coordinates and border styles in form of an array.
-   *
-   * See [Custom Borders](http://handsontable.com/demo/custom_borders.html) demo for examples.
-   *
-   * @since 0.11.0
-   * @type {Boolean|Array}
-   * @default false
-   * @example
-   * ...
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer, {
-   *   customBorders: [{range: {from: {row: 1, col: 1}, to: {row: 3, col: 4}}, left: {}, right: {}, top: {}, bottom: {}}],
-   * });
-   * ...
-   *
-   * // or
-   * ...
-   * var exampleContainer = document.getElementById('example');
-   * var hot = new Handsontable(exampleContainer, {
-   *   customBorders: [{row: 2, col: 2, left: {width: 2, color: 'red'}, right: {width: 1, color: 'green'}, top: '', bottom: ''}],
-   * });
-   * ...
-   */
-  customBorders: false,
-
-  /**
-   * Minimum number of rows. At least that many of rows will be created during initialization.
-   *
-   * @type {Number}
-   * @default 0
-   */
   minRows: 0,
-
-  /**
-   * Minimum number of columns. At least that many of columns will be created during initialization.
-   *
-   * @type {Number}
-   * @default 0
-   */
   minCols: 0,
-
-  /**
-   * Maximum number of rows.
-   *
-   * @type {Number}
-   * @default Infinity
-   */
   maxRows: Infinity,
-
-  /**
-   * Maximum number of cols.
-   *
-   * @type {Number}
-   * @default Infinity
-   */
   maxCols: Infinity,
-
-  /**
-   * When set to 1 (or more), Handsontable will add a new row at the end of grid if there are no more empty rows.
-   *
-   * @type {Number}
-   * @default 0
-   */
   minSpareRows: 0,
-
-  /**
-   * When set to 1 (or more), Handsontable will add a new column at the end of grid if there are no more empty columns.
-   *
-   * @type {Number}
-   * @default 0
-   */
   minSpareCols: 0,
-
-  /**
-   * @type {Boolean}
-   * @default true
-   */
-  allowInsertRow: true,
-
-  /**
-   * @type {Boolean}
-   * @default true
-   */
+  allowInsertRow:true,
   allowInsertColumn: true,
-
-  /**
-   * @type {Boolean}
-   * @default true
-   */
   allowRemoveRow: true,
-
-  /**
-   * @type {Boolean}
-   * @default true
-   */
   allowRemoveColumn: true,
-
-  /**
-   * If true, selection of multiple cells using keyboard or mouse is allowed.
-   *
-   * @type {Boolean}
-   * @default true
-   */
   multiSelect: true,
-
-  /**
-   * Enables the fill handle (drag-down and copy-down) functionality, which shows the small rectangle in bottom
-   * right corner of the selected area, that let's you expand values to the adjacent cells.
-   *
-   * Possible values: `true` (to enable in all directions), `"vertical"` or `"horizontal"` (to enable in one direction),
-   * `false` (to disable completely). Setting to `true` enables the fillHandle plugin.
-   *
-   * @type {Boolean|String}
-   * @default true
-   */
   fillHandle: true,
-
-  /**
-   * Allows to specify the number of rows fixed (aka freezed) on the top of the table.
-   *
-   * @type {Number}
-   * @default 0
-   */
   fixedRowsTop: 0,
-
-  /**
-   * Allows to specify the number of columns fixed (aka freezed) on the left side of the table.
-   *
-   * @type {Number}
-   * @default 0
-   */
   fixedColumnsLeft: 0,
-
-  /**
-   * If `true`, mouse click outside the grid will deselect the current selection.
-   *
-   * @type {Boolean}
-   * @default true
-   */
   outsideClickDeselects: true,
-
-  /**
-   * If `true`, <kbd>ENTER</kbd> begins editing mode (like Google Docs). If `false`, <kbd>ENTER</kbd> moves to next
-   * row (like Excel) and adds new row if necessary. <kbd>TAB</kbd> adds new column if necessary.
-   *
-   * @type {Boolean}
-   * @default true
-   */
   enterBeginsEditing: true,
-
-  /**
-   * Defines cursor move after <kbd>ENTER</kbd> is pressed (<kbd>SHIFT</kbd> + <kbd>ENTER</kbd> uses negative vector).
-   * Can be an object or a function that returns an object. The event argument passed to the function
-   * is a DOM Event object received after a <kbd>ENTER</kbd> key has been pressed. This event object can be used to check
-   * whether user pressed <kbd>ENTER</kbd> or <kbd>SHIFT</kbd> + <kbd>ENTER</kbd>.
-   *
-   * @type {Object|Function}
-   * @default {row: 1, col: 0}
-   */
   enterMoves: {row: 1, col: 0},
-
-  /**
-   * Defines cursor move after <kbd>TAB</kbd> is pressed (<kbd>SHIFT</kbd> + <kbd>TAB</kbd> uses negative vector).
-   * Can be an object or a function that returns an object. The event argument passed to the function
-   * is a DOM Event object received after a <kbd>TAB</kbd> key has been pressed. This event object can be used to check
-   * whether user pressed <kbd>TAB</kbd> or <kbd>SHIFT</kbd> + <kbd>TAB</kbd>.
-   *
-   * @type {Object}
-   * @default {row: 0, col: 1}
-   */
   tabMoves: {row: 0, col: 1},
-
-  /**
-   * If `true`, pressing <kbd>TAB</kbd> or right arrow in the last column will move to first column in next row
-   *
-   * @type {Boolean}
-   * @default false
-   */
   autoWrapRow: false,
-
-  /**
-   * If `true`, pressing <kbd>ENTER</kbd> or down arrow in the last row will move to first row in next column
-   *
-   * @type {Boolean}
-   * @default false
-   */
   autoWrapCol: false,
-
-  /**
-   * Maximum number of rows than can be copied to clipboard using <kbd>CTRL</kbd> + <kbd>C</kbd>.
-   *
-   * @type {Number}
-   * @default 1000
-   */
   copyRowsLimit: 1000,
-
-  /**
-   * Maximum number of columns than can be copied to clipboard using <kbd>CTRL</kbd> + <kbd>C</kbd>.
-   *
-   * @type {Number}
-   * @default 1000
-   */
   copyColsLimit: 1000,
-
-  /**
-   * Defines paste (<kbd>CTRL</kbd> + <kbd>V</kbd>) behavior. Default value `"overwrite"` will paste clipboard value over current selection.
-   * When set to `"shift_down"`, clipboard data will be pasted in place of current selection, while all selected cells are moved down.
-   * When set to `"shift_right"`, clipboard data will be pasted in place of current selection, while all selected cells are moved right.
-   *
-   * @type {String}
-   * @default 'overwrite'
-   */
   pasteMode: 'overwrite',
-
-  /**
-   * @description
-   * Turn on saving the state of column sorting, columns positions and columns sizes in local storage.
-   *
-   * You can save any sort of data in local storage in to preserve table state between page reloads.
-   * In order to enable data storage mechanism, `persistentState` option must be set to `true` (you can set it
-   * either during Handsontable initialization or using the `updateSettings` method). When `persistentState` is enabled it exposes 3 hooks:
-   *
-   * __persistentStateSave__ (key: String, value: Mixed)
-   *
-   *   * Saves value under given key in browser local storage.
-   *
-   * __persistentStateLoad__ (key: String, valuePlaceholder: Object)
-   *
-   *   * Loads `value`, saved under given key, form browser local storage. The loaded `value` will be saved in `valuePlaceholder.value`
-   *     (this is due to specific behaviour of `PluginHooks.execute()` method). If no value have been saved under key `valuePlaceholder.value`
-   *     will be `undefined`.
-   *
-   * __persistentStateReset__ (key: String)
-   *
-   *   * Clears the value saved under `key`. If no `key` is given, all values associated with table will be cleared.
-   *
-   * __Note:__ The main reason behind using `persistentState` hooks rather than regular LocalStorage API is that it
-   * ensures separation of data stored by multiple Handsontable instances. In other words, if you have two (or more)
-   * instances of Handsontable on one page, data saved by one instance won't be accessible by the second instance.
-   * Those two instances can store data under the same key and no data would be overwritten.
-   *
-   * __Important:__ In order for the data separation to work properly, make sure that each instance of Handsontable has a unique `id`.
-   *
-   * @type {Boolean}
-   * @default false
-   */
-  persistentState: false,
-
-  /**
-   * Class name for all visible rows in current selection.
-   *
-   * @type {String}
-   * @default undefined
-   */
   currentRowClassName: void 0,
-
-  /**
-   * Class name for all visible columns in current selection.
-   *
-   * @type {String}
-   * @default undefined
-   */
   currentColClassName: void 0,
-
-  /**
-   * @description
-   * [Column stretching](http://handsontable.com/demo/scroll.html) mode. Possible values: `"none"`, `"last"`, `"all"`.
-   *
-   * @type {String}
-   * @default 'none'
-   */
   stretchH: 'none',
-
-  /**
-   * Lets you overwrite the default `isEmptyRow` method.
-   *
-   * @type {Function}
-   * @param {Number} row
-   * @returns {Boolean}
-   */
-  isEmptyRow: function (row) {
+  isEmptyRow: function (r) {
     var val;
-
     for (var c = 0, clen = this.countCols(); c < clen; c++) {
-      val = this.getDataAtCell(row, c);
-
+      val = this.getDataAtCell(r, c);
       if (val !== '' && val !== null && typeof val !== 'undefined') {
         return false;
       }
     }
-
     return true;
   },
-
-  /**
-   * Lets you overwrite the default `isEmptyCol` method.
-   *
-   * @type {Function}
-   * @param {Number} col
-   * @returns {Boolean}
-   */
-  isEmptyCol: function (col) {
+  isEmptyCol: function (c) {
     var val;
-
     for (var r = 0, rlen = this.countRows(); r < rlen; r++) {
-      val = this.getDataAtCell(r, col);
-
+      val = this.getDataAtCell(r, c);
       if (val !== '' && val !== null && typeof val !== 'undefined') {
         return false;
       }
     }
-
     return true;
   },
-
-  /**
-   * When set to `true`, the table is rerendered when it is detected that it was made visible in DOM.
-   *
-   * @type {Boolean}
-   * @default true
-   */
   observeDOMVisibility: true,
-
-  /**
-   * If set to `true`, cells will accept value that is marked as invalid by cell `validator`, with a background color
-   * automatically applied using CSS class `htInvalid`. If set to `false`, cells will not accept invalid value.
-   *
-   * @type {Boolean}
-   * @default true
-   * @since 0.9.5
-   */
   allowInvalid: true,
-
-  /**
-   * CSS class name for cells that did not pass validation.
-   *
-   * @type {String}
-   * @default 'htInvalid'
-   */
   invalidCellClassName: 'htInvalid',
-
-  /**
-   * When set to an non-empty string, displayed as the cell content for empty cells.
-   *
-   * @type {Boolean|String}
-   * @default false
-   */
   placeholder: false,
-
-  /**
-   * CSS class name for cells that have a placeholder in use.
-   *
-   * @type {String}
-   * @default 'htPlaceholder'
-   */
   placeholderCellClassName: 'htPlaceholder',
-
-  /**
-   * CSS class name for read-only cells.
-   *
-   * @type {String}
-   * @default 'htDimmed'
-   */
   readOnlyCellClassName: 'htDimmed',
-
-  /**
-   * String or rendering function.
-   * String may be one of the following predefined values: `autocomplete`, `checkbox`, `text`, `numeric`.
-   * Function will receive the following arguments: `function(instance, TD, row, col, prop, value, cellProperties) {}`
-   * You can map your own function to a string like this: `Handsontable.cellLookup.renderer.myRenderer = myRenderer;`
-   *
-   * @type {String|Function}
-   * @default undefined
-   */
-  renderer: void 0,
-
-  /**
-   * @type {String}
-   * @default 'htCommentCell'
-   */
   commentedCellClassName: 'htCommentCell',
-
-  /**
-   * Setting to `true` enables selecting just a fragment of the text within a single cell or between adjacent cells.
-   *
-   * @type {Boolean}
-   * @default false
-   */
   fragmentSelection: false,
-
-  /**
-   * @description
-   * Make cell [read only](http://handsontable.com/demo/readonly.html).
-   *
-   * @type {Boolean}
-   * @default false
-   */
   readOnly: false,
-
-  /**
-   * @description
-   * Setting to true enables the search plugin (see [demo](http://handsontable.com/demo/search.html)).
-   *
-   * @type {Boolean}
-   * @default false
-   */
-  search: false,
-
-  /**
-   * @description
-   * Shortcut to define combination of cell renderer and editor for the column.
-   *
-   * Possible values: text, [numeric](http://handsontable.com/demo/numeric.html), [date](http://handsontable.com/demo/date.html),
-   * [checkbox](http://handsontable.com/demo/checkbox.html), [autocomplete](http://handsontable.com/demo/autocomplete.html),
-   * [handsontable](http://handsontable.com/demo/handsontable.html).
-   *
-   * @type {String}
-   * @default 'text'
-   */
   type: 'text',
-
-  /**
-   * @description
-   * Make cell copyable (pressing <kbd>CTRL</kbd> + <kbd>C</kbd> on your keyboard moves its value to system clipboard).
-   *
-   * __Note:__ this setting is `false` by default for cells with type `password`.
-   *
-   * @type {Boolean}
-   * @default true
-   * @since 0.10.2
-   */
   copyable: true,
-
-  /**
-   * String or rendering function.
-   * String may be one of the following predefined values: `autocomplete`, `checkbox`, `text`, `date`, `handsontable`.
-   * Function will receive the following arguments: `function(instance, td, row, col, prop, value, cellProperties) {}`
-   * You can map your own function to a string like this: `Handsontable.cellLookup.renderer.myEditor = myEditor;`
-   *
-   * @type {String|Function}
-   * @default 'text'
-   */
-  editor: 'text',
-
-  /**
-   * @description
-   * Autocomplete definitions. See [demo/autocomplete.html](http://handsontable.com/demo/autocomplete.html) for examples and definitions.
-   *
-   * @type {Array}
-   * @default undefined
-   */
-  autoComplete: void 0,
-
-  /**
-   * Setting to true enables the debug mode, currently used to test the correctness of the row and column
-   * header fixed positioning on a layer above the master table.
-   *
-   * @type {Boolean}
-   * @default false
-   */
-  debug: false,
-
-  /**
-   * When set to `true`, the text of the cell content is wrapped if it does not fit in the fixed column width.
-   *
-   * @type {Boolean}
-   * @default true
-   * @since 0.11.0
-   */
+  debug: false, //shows debug overlays in Walkontable
   wordWrap: true,
-
-  /**
-   * CSS class name added to cells with cell meta `wordWrap: false`.
-   *
-   * @type {String}
-   * @default 'htNoWrap'
-   * @since 0.11.0
-   */
   noWordWrapClassName: 'htNoWrap',
-
-  /**
-   * @description
-   * Defines if the right-click context menu should be enabled. Context menu allows to create new row or
-   * column at any place in the grid. Possible values: `true` (to enable basic options), `false` (to disable completely)
-   * or array of any available strings: `["row_above", "row_below", "col_left", "col_right",
-   * "remove_row", "remove_col", "undo", "redo", "sep1", "sep2", "sep3"]`.
-   *
-   * See [demo/contextmenu.html](http://handsontable.com/demo/contextmenu.html) for examples.
-   *
-   * @type {Boolean|Array}
-   * @default undefined
-   */
   contextMenu: void 0,
-
-  /**
-   * If `true`, undo/redo functionality is enabled.
-   *
-   * @type {Boolean}
-   * @default undefined
-   */
   undo: void 0,
-
-  /**
-   * @description
-   * Turn on [Column sorting](http://handsontable.com/demo/sorting.html).
-   *
-   * @type {Boolean}
-   * @default undefined
-   */
   columnSorting: void 0,
-
-  /**
-   * @description
-   * Turn on [Manual column move](http://handsontable.com/demo/column_move.html), if set to a boolean or define initial
-   * column order, if set to an array of column indexes.
-   *
-   * @type {Boolean|Array}
-   * @default undefined
-   */
   manualColumnMove: void 0,
-
-  /**
-   * @description
-   * Turn on [Manual column resize](http://handsontable.com/demo/column_resize.html), if set to a boolean or define initial
-   * column resized widths, if set to an array of numbers.
-   *
-   * @type {Boolean|Array}
-   * @default undefined
-   */
   manualColumnResize: void 0,
-
-  /**
-   * @description
-   * Turn on [Manual row move](http://handsontable.com/demo/column_move.html), if set to a boolean or define initial
-   * row order, if set to an array of row indexes.
-   *
-   * @type {Boolean|Array}
-   * @default undefined
-   * @since 0.11.0
-   */
   manualRowMove: void 0,
-
-  /**
-   * @description
-   * Turn on [Manual row resize](http://handsontable.com/demo/column_resize.html), if set to a boolean or define initial
-   * row resized heights, if set to an array of numbers.
-   *
-   * @type {Boolean|Array}
-   * @default undefined
-   * @since 0.11.0
-   */
   manualRowResize: void 0,
-
-  /**
-   * @description
-   * Setting to true or array enables the mergeCells plugin, which enables the merging of the cells. (see [demo](http://handsontable.com/demo/merge_cells.html)).
-   * You can provide the merged cells on the pageload if you feed the mergeCells option with an array.
-   *
-   * @type {Boolean|Array}
-   * @default false
-   */
-  mergeCells: false,
-
-  /**
-   * Number of rows to be prerendered before and after the viewport is changed.
-   *
-   * @type {Number}
-   * @default 10
-   */
-  viewportRowRenderingOffset: 10,
-
-  /**
-   * Number of columns to be prerendered before and after the viewport is changed.
-   *
-   * @type {Number}
-   * @default 10
-   */
-  viewportColumnRenderingOffset: 10,
-
-  /**
-   * @description
-   * If `true`, enables Grouping plugin, which enables applying expandable row and column groups.
-   * To initialize Handsontable with predefined groups, provide row or column group start and end coordinates in form of an array.
-   *
-   * See [Grouping](http://handsontable.com/demo/grouping.html) demo for examples.
-   *
-   * @type {Boolean|Array}
-   * @default undefined
-   * @since 0.11.4
-   * @example
-   *  ...
-   *  // as boolean
-   *  groups: true,
-   *  ...
-   *
-   *  ...
-   *  // as array
-   *  groups: [{cols: [0, 2]}, {cols: [5, 15], rows: [0, 5]}],
-   *  ...
-   */
-  groups: void 0,
-
-  /**
-   * A usually small function or regular expression that validates the input.
-   * After you determine if the input is valid, execute `callback(true)` or `callback(false)` to proceed with the execution.
-   * In function, `this` binds to cellProperties.
-   *
-   * @type {Function|RegExp}
-   * @default undefined
-   * @since 0.9.5
-   */
-  validator: void 0,
   manualColumnFreeze: void 0,
-  trimWhitespace: true,
-  settings: void 0,
-  source: void 0,
-  title: void 0,
-  checkedTemplate: void 0,
-  uncheckedTemplate: void 0,
-  format: void 0
+  viewportRowRenderingOffset: 10, //number of rows to be prerendered before and after the viewport
+  viewportColumnRenderingOffset: 10, // number of columns to be prerendered before and after the viewport
+  groups: void 0
 };
 Handsontable.DefaultSettings = DefaultSettings;
 
@@ -3688,53 +2594,6 @@ Handsontable.Dom.isChildOf = function (child, parent) {
     node = node.parentNode;
   }
   return false;
-};
-
-
-// Polymer/Webcomponents polyfills
-if (typeof unwrap === 'undefined') {
-  var unwrap = function unwrap(el) {
-    return el;
-  };
-}
-if (typeof wrap === 'undefined') {
-  var wrap = function wrap(el) {
-    return el;
-  };
-}
-
-/**
- * Check if an element is part of `hot-table` web component.
- * If an element which is child of another web component was found then returns `false`.
- *
- * @param {Element} element
- * @returns {Boolean}
- */
-Handsontable.Dom.isChildOfWebComponentTable = function(element) {
-  var hotTableName = 'hot-table',
-    result = false,
-    parentNode;
-
-  // Wrap element into polymer/webcomponent container
-  parentNode = wrap(element);
-
-  function isHotTable(element) {
-    return element.nodeType === Node.ELEMENT_NODE && element.nodeName === hotTableName.toUpperCase();
-  }
-
-  while (parentNode != null) {
-    if (isHotTable(parentNode)) {
-      result = true;
-      break;
-    }
-    else if (parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-      result = isHotTable(parentNode.host);
-      break;
-    }
-    parentNode = parentNode.parentNode;
-  }
-
-  return result;
 };
 
 /**
@@ -3883,17 +2742,7 @@ else { //IE8
  */
 Handsontable.Dom.isVisible = function (elem) {
   var next = elem;
-
-  function extractElement(element) {
-    /* global ShadowDOMPolyfill */
-    if (typeof ShadowDOMPolyfill !== 'undefined' && ShadowDOMPolyfill.unwrapIfNeeded) {
-      return ShadowDOMPolyfill.unwrapIfNeeded(element);
-    }
-
-    return element;
-  }
-
-  while (extractElement(next) !== document.documentElement) { //until <html> reached
+  while (next !== document.documentElement) { //until <html> reached
     if (next === null) { //parent detached from DOM
       return false;
     }
@@ -4061,6 +2910,8 @@ Handsontable.Dom.outerHeight = function (elem) {
 };
 
 Handsontable.Dom.innerHeight = function (elem) {
+  //console.log(elem);
+  //console.log(elem.clientHeight);
   //return elem.clientHeight || elem.innerHeight;
   // Hooks by Fred
   return 17;
@@ -4288,18 +3139,6 @@ if(!window.Handsontable){
 
 Handsontable.countEventManagerListeners = 0; //used to debug memory leaks
 
-// Polymer/Webcomponents polyfills
-if (typeof unwrap === 'undefined') {
-  var unwrap = function unwrap(el) {
-    return el;
-  };
-}
-if (typeof wrap === 'undefined') {
-  var wrap = function wrap(el) {
-    return el;
-  };
-}
-
 Handsontable.eventManager = function (instance) {
   var
     addEvent,
@@ -4325,9 +3164,7 @@ Handsontable.eventManager = function (instance) {
   addEvent = function (element, event, callback) {
     var callbackProxy;
 
-    callbackProxy = function callbackProxy(event) {
-      var target;
-
+    callbackProxy = function (event) {
       if (event.target == void 0 && event.srcElement != void 0) {
         if (event.definePoperty) {
           event.definePoperty('target', {
@@ -4337,6 +3174,7 @@ Handsontable.eventManager = function (instance) {
           event.target = event.srcElement;
         }
       }
+
       if (event.preventDefault == void 0) {
         if (event.definePoperty) {
           event.definePoperty('preventDefault', {
@@ -4349,22 +3187,6 @@ Handsontable.eventManager = function (instance) {
             this.returnValue = false;
           };
         }
-      }
-      event.realTarget = event.target;
-      event.isTargetWebComponent = false;
-      target = event.path && event.path.length ? event.path[0] : event.target;
-
-      if (Handsontable.Dom.isChildOfWebComponentTable(target)) {
-        event.realTarget = wrap(event.realTarget);
-        event.isTargetWebComponent = true;
-
-        Object.defineProperty(event, 'target', {
-          get: function() {
-            return wrap(target);
-          },
-          enumerable: true,
-          configurable: true
-        });
       }
       callback.call(this, event);
     };
@@ -4554,28 +3376,23 @@ Handsontable.TableView = function (instance) {
     var next = event.target;
 
     if (isMouseDown) {
-      return; // it must have been started in a cell
+      return; //it must have been started in a cell
     }
 
-    // immediate click on "spreader" means click on the right side of vertical scrollbar
-    if (next !== that.instance.container) {
+    if (next !== that.wt.wtTable.spreader) { //immediate click on "spreader" means click on the right side of vertical scrollbar
       while (next !== document.documentElement) {
         if (next === null) {
-          if (event.isTargetWebComponent) {
-            break;
-          }
-          // click on something that was a row but now is detached (possibly because your click triggered a rerender)
-          return;
+          return; //click on something that was a row but now is detached (possibly because your click triggered a rerender)
         }
-        if (next === instance.rootElement) {
-          // click inside container
-          return;
+       if (next === instance.rootElement) {
+          return; //click inside container
         }
         next = next.parentNode;
       }
     }
 
-    // function did not return until here, we have an outside click!
+    //function did not return until here, we have an outside click!
+
     if (that.settings.outsideClickDeselects) {
       instance.deselectCell();
     }
@@ -4673,7 +3490,9 @@ Handsontable.TableView = function (instance) {
       return that.settings.fixedRowsTop;
     },
     renderAllRows: that.settings.renderAllRows,
-    renderAllColumns: that.settings.renderAllColumns, //Hook by Fred
+    //Hook by fred
+    renderAllColumns: that.settings.renderAllColumns,
+    //end hook
     rowHeaders: function () {
       var arr = [];
       if(instance.hasRowHeaders()) {
@@ -4719,9 +3538,9 @@ Handsontable.TableView = function (instance) {
 
       isMouseDown = true;
 
-      Handsontable.Dom.enableImmediatePropagation(event);
-
       Handsontable.hooks.run(instance, 'beforeOnCellMouseDown', event, coords, TD);
+
+      Handsontable.Dom.enableImmediatePropagation(event);
 
       if (!event.isImmediatePropagationStopped()) {
 
@@ -4734,7 +3553,7 @@ Handsontable.TableView = function (instance) {
           }
         }
         else {
-          if ((coords.row < 0 || coords.col < 0) && (coords.row >= 0 || coords.col >= 0)) {
+          if (coords.row < 0 || coords.col < 0) {
             if (coords.row < 0) {
               instance.selectCell(0, coords.col, instance.countRows() - 1, coords.col);
               instance.selection.setSelectedHeaders(false, true);
@@ -4745,9 +3564,6 @@ Handsontable.TableView = function (instance) {
             }
           }
           else {
-            coords.row = coords.row < 0 ? 0 : coords.row;
-            coords.col = coords.col < 0 ? 0 : coords.col;
-
             instance.selection.setRangeStart(coords);
           }
         }
@@ -4960,7 +3776,6 @@ Handsontable.TableView.prototype.appendColHeader = function (col, TH) {
     Handsontable.Dom.fastInnerHTML(SPAN, this.instance.getColHeader(col));
   } else {
     Handsontable.Dom.fastInnerText(SPAN, String.fromCharCode(160)); // workaround for https://github.com/handsontable/handsontable/issues/1946
-    Handsontable.Dom.addClass(SPAN, 'cornerHeader');
   }
   DIV.appendChild(SPAN);
 
@@ -5075,13 +3890,6 @@ Handsontable.TableView.prototype.destroy = function () {
 (function(Handsontable){
   'use strict';
 
-  /**
-   * @param {Object} instance Instance of Handsontable
-   * @param {*} priv
-   * @param {*} selection
-   * @util
-   * @class Handsontable.EditorManager
-   */
   Handsontable.EditorManager = function(instance, priv, selection){
     var that = this;
     var keyCodes = Handsontable.helper.keyCode;
@@ -5115,7 +3923,7 @@ Handsontable.TableView.prototype.destroy = function () {
 
             if (!activeEditor.isWaiting()) {
               if (!Handsontable.helper.isMetaKey(event.keyCode) && !ctrlDown && !that.isEditorOpened()) {
-                that.openEditor("", event);
+                that.openEditor("");
                 return;
               }
             }
@@ -5204,7 +4012,7 @@ Handsontable.TableView.prototype.destroy = function () {
                   break;
 
                 case keyCodes.F2: /* F2 */
-                  that.openEditor(null, event);
+                  that.openEditor();
                   event.preventDefault(); //prevent Opera from opening Go to Page dialog
                   break;
 
@@ -5219,8 +4027,8 @@ Handsontable.TableView.prototype.destroy = function () {
 
                   } else {
 
-                    if (instance.getSettings().enterBeginsEditing) {
-                      that.openEditor(null, event);
+                    if (instance.getSettings().enterBeginsEditing){
+                      that.openEditor();
                     } else {
                       moveSelectionAfterEnter(event.shiftKey);
                     }
@@ -5285,7 +4093,7 @@ Handsontable.TableView.prototype.destroy = function () {
         onKeyDown(originalEvent);
       });
 
-      eventManager.addEventListener(document.documentElement, 'keydown', function (ev){
+      eventManager.addEventListener(document, 'keydown', function (ev){
         instance.runHooks('afterDocumentKeyDown', ev);
       });
 
@@ -5350,32 +4158,19 @@ Handsontable.TableView.prototype.destroy = function () {
     };
 
     /**
-     * Destroy current editor, if exists.
-     *
-     * @function destroyEditor
-     * @memberof! Handsontable.EditorManager#
+     * Destroy current editor, if exists
      * @param {Boolean} revertOriginal
      */
     this.destroyEditor = function (revertOriginal) {
       this.closeEditor(revertOriginal);
     };
 
-    /**
-     * Get active editor.
-     *
-     * @function getActiveEditor
-     * @memberof! Handsontable.EditorManager#
-     * @returns {*}
-     */
     this.getActiveEditor = function () {
       return activeEditor;
     };
 
     /**
-     * Prepare text input to be displayed at given grid cell.
-     *
-     * @function prepareEditor
-     * @memberof! Handsontable.EditorManager#
+     * Prepare text input to be displayed at given grid cell
      */
     this.prepareEditor = function () {
 
@@ -5404,39 +4199,16 @@ Handsontable.TableView.prototype.destroy = function () {
 
     };
 
-    /**
-     * Check is editor is opened/showed.
-     *
-     * @function isEditorOpened
-     * @memberof! Handsontable.EditorManager#
-     * @returns {Boolean}
-     */
     this.isEditorOpened = function () {
       return activeEditor.isOpened();
     };
 
-    /**
-     * Open editor with initial value.
-     *
-     * @function openEditor
-     * @memberof! Handsontable.EditorManager#
-     * @param {String} initialValue
-     */
-    this.openEditor = function (initialValue, event) {
+    this.openEditor = function (initialValue) {
       if (!activeEditor.cellProperties.readOnly){
-        activeEditor.beginEditing(initialValue, event);
+        activeEditor.beginEditing(initialValue);
       }
     };
 
-    /**
-     * Close editor, finish editing cell.
-     *
-     * @function closeEditor
-     * @memberof! Handsontable.EditorManager#
-     * @param {Boolean} restoreOriginalValue
-     * @param {Boolean} ctrlDown
-     * @param {Function} callback
-     */
     this.closeEditor = function (restoreOriginalValue, ctrlDown, callback) {
 
       if (!activeEditor){
@@ -5449,24 +4221,10 @@ Handsontable.TableView.prototype.destroy = function () {
       }
     };
 
-    /**
-     * Close editor and save changes.
-     *
-     * @function closeEditorAndSaveChanges
-     * @memberof! Handsontable.EditorManager#
-     * @param {Boolean} ctrlDown
-     */
     this.closeEditorAndSaveChanges = function(ctrlDown){
       return this.closeEditor(false, ctrlDown);
     };
 
-    /**
-     * Close editor and restore original value.
-     *
-     * @function closeEditorAndRestoreOriginalValue
-     * @memberof! Handsontable.EditorManager#
-     * @param {Boolean} ctrlDown
-     */
     this.closeEditorAndRestoreOriginalValue = function(ctrlDown){
       return this.closeEditor(true, ctrlDown);
     };
@@ -5677,7 +4435,8 @@ Handsontable.helper.isNumeric = function (n) {
     return t == 'number' ? !isNaN(n) && isFinite(n) :
            t == 'string' ? !n.length ? false :
            n.length == 1 ? /\d/.test(n) :
-           /^\s*[+-]?\s*(?:(?:\d+(?:\.\d+)?(?:e[+-]?\d+)?)|(?:0x[a-f\d]+))\s*$/i.test(n) :
+           // /^\s*[+-]?\s*(?:(?:\d+(?:\.\d+)?(?:e[+-]?\d+)?)|(?:0x[a-f\d]+))\s*$/i.test(n) :
+           /^\s*[+-]?\s*(?:(?:\d+(?:\.\d+)?(?:e[+-]?\d+)?)|(?:0x[a-f\d]+))\s*%?\s*$/i.test(n) :
            t == 'object' ? !!n && typeof n.valueOf() == "number" && !(n instanceof Date) : false;
 };
 
@@ -6089,20 +4848,18 @@ Handsontable.helper.pageY = function (event) {
   return cursorY;
 };
 
-
 (function (Handsontable) {
   'use strict';
 
   /**
    * Utility class that gets and saves data from/to the data source using mapping of columns numbers to object property names
-   * @todo refactor arguments of methods getRange, getText to be numbers (not objects)
-   * @todo remove priv, GridSettings from object constructor
+   * TODO refactor arguments of methods getRange, getText to be numbers (not objects)
+   * TODO remove priv, GridSettings from object constructor
    *
-   * @param {Object} instance Instance of Handsontable
-   * @param {*} priv
-   * @param {*} GridSettings Grid settings
-   * @util
-   * @class Handsontable.DataMap
+   * @param instance
+   * @param priv
+   * @param GridSettings
+   * @constructor
    */
   Handsontable.DataMap = function (instance, priv, GridSettings) {
     this.instance = instance;
@@ -6122,10 +4879,6 @@ Handsontable.helper.pageY = function (event) {
   Handsontable.DataMap.prototype.DESTINATION_RENDERER = 1;
   Handsontable.DataMap.prototype.DESTINATION_CLIPBOARD_GENERATOR = 2;
 
-  /**
-   * @param {Object} obj
-   * @returns {*}
-   */
   Handsontable.DataMap.prototype.recursiveDuckSchema = function (obj) {
     var schema;
     if (!Array.isArray(obj)){
@@ -6147,12 +4900,6 @@ Handsontable.helper.pageY = function (event) {
     return schema;
   };
 
-  /**
-   * @param {Object} schema
-   * @param {Number} lastCol
-   * @param {Number} parent
-   * @returns {Number}
-   */
   Handsontable.DataMap.prototype.recursiveDuckColumns = function (schema, lastCol, parent) {
     var prop, i;
     if (typeof lastCol === 'undefined') {
@@ -6201,12 +4948,6 @@ Handsontable.helper.pageY = function (event) {
     }
   };
 
-  /**
-   * Returns property name that corresponds with the given column index.
-   *
-   * @param {Number} col
-   * @returns {Number}
-   */
   Handsontable.DataMap.prototype.colToProp = function (col) {
     col = Handsontable.hooks.run(this.instance, 'modifyCol', col);
 
@@ -6217,10 +4958,6 @@ Handsontable.helper.pageY = function (event) {
     return col;
   };
 
-  /**
-   * @param {Object} prop
-   * @returns {*}
-   */
   Handsontable.DataMap.prototype.propToCol = function (prop) {
     var col;
 
@@ -6234,9 +4971,6 @@ Handsontable.helper.pageY = function (event) {
     return col;
   };
 
-  /**
-   * @returns {Object}
-   */
   Handsontable.DataMap.prototype.getSchema = function () {
     var schema = this.instance.getSettings().dataSchema;
     if (schema) {
@@ -6249,10 +4983,8 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Creates row at the bottom of the data array.
-   *
-   * @param {Number} [index] Index of the row before which the new row will be inserted
-   * @returns {Number} Returns number of created rows
+   * Creates row at the bottom of the data array
+   * @param {Number} [index] Optional. Index of the row before which the new row will be inserted
    */
   Handsontable.DataMap.prototype.createRow = function (index, amount, createdAutomatically) {
     var row
@@ -6305,11 +5037,9 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Creates col at the right of the data array.
-   *
-   * @param {Number} [index] Index of the column before which the new column will be inserted
-   * @param {Number} [amount]
-   * @returns {Number} Returns number of created columns
+   * Creates col at the right of the data array
+   * @param {Number} [index] Optional. Index of the column before which the new column will be inserted
+   *   * @param {Number} [amount] Optional.
    */
   Handsontable.DataMap.prototype.createCol = function (index, amount, createdAutomatically) {
     if (this.instance.dataType === 'object' || this.instance.getSettings().columns) {
@@ -6361,10 +5091,9 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Removes row from the data array.
-   *
-   * @param {Number} [index] Index of the row to be removed. If not provided, the last row will be removed
-   * @param {Number} [amount] Amount of the rows to be removed. If not provided, one row will be removed
+   * Removes row from the data array
+   * @param {Number} [index] Optional. Index of the row to be removed. If not provided, the last row will be removed
+   * @param {Number} [amount] Optional. Amount of the rows to be removed. If not provided, one row will be removed
    */
   Handsontable.DataMap.prototype.removeRow = function (index, amount) {
     if (!amount) {
@@ -6399,10 +5128,9 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Removes column from the data array.
-   *
-   * @param {Number} [index] Index of the column to be removed. If not provided, the last column will be removed
-   * @param {Number} [amount] Amount of the columns to be removed. If not provided, one column will be removed
+   * Removes column from the data array
+   * @param {Number} [index] Optional. Index of the column to be removed. If not provided, the last column will be removed
+   * @param {Number} [amount] Optional. Amount of the columns to be removed. If not provided, one column will be removed
    */
   Handsontable.DataMap.prototype.removeCol = function (index, amount) {
     if (this.instance.dataType === 'object' || this.instance.getSettings().columns) {
@@ -6434,12 +5162,11 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Add/Removes data from the column.
-   *
-   * @param {Number} col Index of column in which do you want to do splice
+   * Add / removes data from the column
+   * @param {Number} col Index of column in which do you want to do splice.
    * @param {Number} index Index at which to start changing the array. If negative, will begin that many elements from the end
    * @param {Number} amount An integer indicating the number of old array elements to remove. If amount is 0, no elements are removed
-   * @returns {Array} Returns removed portion of columns
+   * param {...*} elements Optional. The elements to add to the array. If you don't specify any elements, spliceCol simply removes elements from the array
    */
   Handsontable.DataMap.prototype.spliceCol = function (col, index, amount/*, elements...*/) {
     var elements = 4 <= arguments.length ? [].slice.call(arguments, 3) : [];
@@ -6461,12 +5188,11 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Add/Removes data from the row.
-   *
-   * @param {Number} row Index of row in which do you want to do splice
+   * Add / removes data from the row
+   * @param {Number} row Index of row in which do you want to do splice.
    * @param {Number} index Index at which to start changing the array. If negative, will begin that many elements from the end
    * @param {Number} amount An integer indicating the number of old array elements to remove. If amount is 0, no elements are removed
-   * @returns {Array} Returns removed portion of rows
+   * param {...*} elements Optional. The elements to add to the array. If you don't specify any elements, spliceCol simply removes elements from the array
    */
   Handsontable.DataMap.prototype.spliceRow = function (row, index, amount/*, elements...*/) {
     var elements = 4 <= arguments.length ? [].slice.call(arguments, 3) : [];
@@ -6487,8 +5213,7 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Returns single value from the data array.
-   *
+   * Returns single value from the data array
    * @param {Number} row
    * @param {Number} prop
    */
@@ -6515,13 +5240,13 @@ Handsontable.helper.pageY = function (event) {
        *  d3/jQuery getter/setter properties:
        *
        *    {columns: [{
-       *      data: function(row, value){
-       *        if(arguments.length === 1){
-       *          return row.property();
-       *        }
-       *        row.property(value);
-       *      }
-       *    }]}
+         *      data: function(row, value){
+         *        if(arguments.length === 1){
+         *          return row.property();
+         *        }
+         *        row.property(value);
+         *      }
+         *    }]}
        */
       return prop(this.dataSource.slice(
         row,
@@ -6536,11 +5261,10 @@ Handsontable.helper.pageY = function (event) {
   var copyableLookup = Handsontable.helper.cellMethodLookupFactory('copyable', false);
 
   /**
-   * Returns single value from the data array (intended for clipboard copy to an external application).
-   *
+   * Returns single value from the data array (intended for clipboard copy to an external application)
    * @param {Number} row
    * @param {Number} prop
-   * @returns {String}
+   * @return {String}
    */
   Handsontable.DataMap.prototype.getCopyable = function (row, prop) {
     if (copyableLookup.call(this.instance, row, this.propToCol(prop))) {
@@ -6550,12 +5274,11 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Saves single value to the data array.
-   *
+   * Saves single value to the data array
    * @param {Number} row
    * @param {Number} prop
    * @param {String} value
-   * @param {String} [source] Source of hook runner.
+   * @param {String} [source] Optional. Source of hook runner.
    */
   Handsontable.DataMap.prototype.set = function (row, prop, value, source) {
     row = Handsontable.hooks.run(this.instance, 'modifyRow', row, source || "datamapGet");
@@ -6588,10 +5311,6 @@ Handsontable.helper.pageY = function (event) {
    * This ridiculous piece of code maps rows Id that are present in table data to those displayed for user.
    * The trick is, the physical row id (stored in settings.data) is not necessary the same
    * as the logical (displayed) row id (e.g. when sorting is applied).
-   *
-   * @param {Number} index
-   * @param {Number} amount
-   * @returns {Number}
    */
   Handsontable.DataMap.prototype.physicalRowsToLogical = function (index, amount) {
     var totalRows = this.instance.countRows();
@@ -6612,7 +5331,7 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Clears the data array.
+   * Clears the data array
    */
   Handsontable.DataMap.prototype.clear = function () {
     for (var r = 0; r < this.instance.countRows(); r++) {
@@ -6623,21 +5342,19 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Returns the data array.
-   *
-   * @returns {Array}
+   * Returns the data array
+   * @return {Array}
    */
   Handsontable.DataMap.prototype.getAll = function () {
     return this.dataSource;
   };
 
   /**
-   * Returns data range as array.
-   *
-   * @param {Object} [start] Start selection position
-   * @param {Object} [end] End selection position
+   * Returns data range as array
+   * @param {Object} start Start selection position
+   * @param {Object} end End selection position
    * @param {Number} destination Destination of datamap.get
-   * @returns {Array}
+   * @return {Array}
    */
   Handsontable.DataMap.prototype.getRange = function (start, end, destination) {
     var r, rlen, c, clen, output = [], row;
@@ -6655,22 +5372,20 @@ Handsontable.helper.pageY = function (event) {
   };
 
   /**
-   * Return data as text (tab separated columns).
-   *
-   * @param {Object} [start] Start selection position
-   * @param {Object} [end] End selection position
-   * @returns {String}
+   * Return data as text (tab separated columns)
+   * @param {Object} start (Optional) Start selection position
+   * @param {Object} end (Optional) End selection position
+   * @return {String}
    */
   Handsontable.DataMap.prototype.getText = function (start, end) {
     return SheetClip.stringify(this.getRange(start, end, this.DESTINATION_RENDERER));
   };
 
   /**
-   * Return data as copyable text (tab separated columns intended for clipboard copy to an external application).
-   *
-   * @param {Object} [start] Start selection position
-   * @param {Object} [end] End selection position
-   * @returns {String}
+   * Return data as copyable text (tab separated columns intended for clipboard copy to an external application)
+   * @param {Object} start (Optional) Start selection position
+   * @param {Object} end (Optional) End selection position
+   * @return {String}
    */
   Handsontable.DataMap.prototype.getCopyableText = function (start, end) {
     return SheetClip.stringify(this.getRange(start, end, this.DESTINATION_CLIPBOARD_GENERATOR));
@@ -6691,6 +5406,7 @@ Handsontable.helper.pageY = function (event) {
       } else {
         TD.className = cellProperties.className;
       }
+
     }
 
     if (cellProperties.readOnly) {
@@ -6699,9 +5415,6 @@ Handsontable.helper.pageY = function (event) {
 
     if (cellProperties.valid === false && cellProperties.invalidCellClassName) {
       Handsontable.Dom.addClass(TD, cellProperties.invalidCellClassName);
-    }
-    else {
-      Handsontable.Dom.removeClass(TD, cellProperties.invalidCellClassName);
     }
 
     if (cellProperties.wordWrap === false && cellProperties.noWordWrapClassName) {
@@ -6737,10 +5450,6 @@ Handsontable.helper.pageY = function (event) {
     }
 
     var escaped = Handsontable.helper.stringify(value);
-
-    if(!instance.getSettings().trimWhitespace) {
-      escaped = escaped.replace(/ /g, String.fromCharCode(160));
-    }
 
     if (cellProperties.rendererTemplate) {
       Handsontable.Dom.empty(TD);
@@ -6867,21 +5576,32 @@ Handsontable.helper.pageY = function (event) {
 
     var INPUT = clonableINPUT.cloneNode(false); //this is faster than createElement
 
-    if (value === cellProperties.checkedTemplate || value === Handsontable.helper.stringify(cellProperties.checkedTemplate)) {
+    if (value === cellProperties.checkedTemplate || 
+        value === Handsontable.helper.stringify(cellProperties.checkedTemplate) ||
+        (typeof value == "string" && value.toLowerCase() === "true")) {
       INPUT.checked = true;
       TD.appendChild(INPUT);
     }
-    else if (value === cellProperties.uncheckedTemplate || value === Handsontable.helper.stringify(cellProperties.uncheckedTemplate)) {
+    else if (value === cellProperties.uncheckedTemplate || 
+            value === Handsontable.helper.stringify(cellProperties.uncheckedTemplate) ||
+            (typeof value == "string" && value.toLowerCase() === "false")) {
       TD.appendChild(INPUT);
     }
-    /* Hook by Frederic Aoustin
-   * To avoid "bad value" alert when the object property corresponding to the chechbox is empty
-   */
-    else { 
+    else if (value === null) { //default value
       INPUT.className += ' noValue';
       TD.appendChild(INPUT);
-    } 
-    // END of hook
+    }
+    else {
+	/* MOD by Frederic Aoustin
+	 * To avoid "bad value" alert when the object property corresponding to the chechbox is empty
+	 */
+	  INPUT.className += ' noValue';
+      TD.appendChild(INPUT);
+	/* END of MOD 
+	 * Old code:
+      Handsontable.Dom.fastInnerText(TD, '#bad value#'); //this is faster than innerHTML. See: https://github.com/handsontable/handsontable/wiki/JavaScript-&-DOM-performance-tips
+	 */
+    }
 
     if (cellProperties.readOnly) {
       eventManager.addEventListener(INPUT,'click',function (event) {
@@ -7129,7 +5849,7 @@ Handsontable.helper.pageY = function (event) {
     }
   };
 
-  BaseEditor.prototype.beginEditing = function(initialValue, event){
+  BaseEditor.prototype.beginEditing = function(initialValue){
     if (this.state != Handsontable.EditorState.VIRGIN) {
       return;
     }
@@ -7143,7 +5863,7 @@ Handsontable.helper.pageY = function (event) {
 
     this.setValue(Handsontable.helper.stringify(initialValue));
 
-    this.open(event);
+    this.open();
     this._opened = true;
     this.focus();
 
@@ -7151,14 +5871,13 @@ Handsontable.helper.pageY = function (event) {
   };
 
   BaseEditor.prototype.finishEditing = function (restoreOriginalValue, ctrlDown, callback) {
-    var _this = this,
-      val;
+    var _this = this;
 
     if (callback) {
       var previousCloseCallback = this._closeCallback;
 
       this._closeCallback = function (result) {
-        if (previousCloseCallback) {
+        if(previousCloseCallback){
           previousCloseCallback(result);
         }
         callback(result);
@@ -7184,17 +5903,9 @@ Handsontable.helper.pageY = function (event) {
 
         return;
       }
-
-      if (this.instance.getSettings().trimWhitespace) {
-        val = [
-          [String.prototype.trim.call(this.getValue())] // String.prototype.trim is defined in Walkontable polyfill.js
-        ];
-      } else {
-        val = [
-          [this.getValue()]
-        ];
-      }
-
+      var val = [
+        [String.prototype.trim.call(this.getValue())] // String.prototype.trim is defined in Walkontable polyfill.js
+      ];
 
       this.state = Handsontable.EditorState.WAITING;
       this.saveValue(val, ctrlDown);
@@ -7271,12 +5982,13 @@ Handsontable.helper.pageY = function (event) {
   };
 
   var onBeforeKeyDown =  function onBeforeKeyDown(event){
-    var instance = this,
-      that = instance.getActiveEditor(),
-      keyCodes, ctrlDown;
 
-    keyCodes = Handsontable.helper.keyCode;
-    ctrlDown = (event.ctrlKey || event.metaKey) && !event.altKey; //catch CTRL but not right ALT (which in some systems triggers ALT+CTRL)
+    var instance = this;
+    var that = instance.getActiveEditor();
+
+    var keyCodes = Handsontable.helper.keyCode;
+    var ctrlDown = (event.ctrlKey || event.metaKey) && !event.altKey; //catch CTRL but not right ALT (which in some systems triggers ALT+CTRL)
+
     Handsontable.Dom.enableImmediatePropagation(event);
 
     //Process only events that have been fired in the editor
@@ -7308,15 +6020,8 @@ Handsontable.helper.pageY = function (event) {
         var isMultipleSelection = !(selected[0] === selected[2] && selected[1] === selected[3]);
         if ((ctrlDown && !isMultipleSelection) || event.altKey) { //if ctrl+enter or alt+enter, add new line
           if(that.isOpened()){
-            var caretPosition = Handsontable.Dom.getCaretPosition(that.TEXTAREA),
-                value = that.getValue();
-
-            var newValue = value.slice(0, caretPosition) + '\n' + value.slice(caretPosition);
-
-            that.setValue(newValue);
-
-            Handsontable.Dom.setCaretPosition(that.TEXTAREA, caretPosition + 1);
-
+            that.setValue(that.getValue() + '\n');
+            that.focus();
           } else {
             that.beginEditing(that.originalValue + '\n');
           }
@@ -7461,8 +6166,8 @@ Handsontable.helper.pageY = function (event) {
     var editLeft = currentOffset.left - containerOffset.left - 1;
 
     var settings = this.instance.getSettings();
-    var rowHeadersCount = settings.rowHeaders  ? 1 : 0;
-    var colHeadersCount = settings.colHeaders  ? 1 : 0;
+    var rowHeadersCount = settings.rowHeaders === false ? 0 : 1;
+    var colHeadersCount = settings.colHeaders === false ? 0 : 1;
     var editorSection = this.checkEditorSection();
     var cssTransformOffset;
 
@@ -7485,18 +6190,19 @@ Handsontable.helper.pageY = function (event) {
     if (editLeft < 0) {
       editLeft = 0;
     }
-
-    if(colHeadersCount && this.instance.getSelected()[0] === 0) {
+    if (rowHeadersCount > 0 && parseInt(this.TD.style.borderTopWidth, 10) > 0) {
       editTop += 1;
     }
+    if (colHeadersCount > 0 && parseInt(this.TD.style.borderLeftWidth, 10) > 0) {
+      editLeft += 1;
+    }
+
 
     if(cssTransformOffset && cssTransformOffset != -1) {
       this.textareaParentStyle[cssTransformOffset[0]] = cssTransformOffset[1];
     } else {
       Handsontable.Dom.resetCssTransform(this.textareaParentStyle);
     }
-
-
 
     this.textareaParentStyle.top = editTop + 'px';
     this.textareaParentStyle.left = editLeft + 'px';
@@ -7508,9 +6214,8 @@ Handsontable.helper.pageY = function (event) {
         cellLeftOffset = this.TD.offsetLeft - this.instance.view.wt.wtScrollbars.horizontal.getScrollPosition();
 
     var width = Handsontable.Dom.innerWidth(this.TD) - 8  //$td.width()
-      , maxWidth = this.instance.view.maximumVisibleElementWidth(cellLeftOffset) - 8 //8 is TEXTAREAs padding
-
-      , height = this.TD.scrollHeight + 1
+      , maxWidth = this.instance.view.maximumVisibleElementWidth(cellLeftOffset) - 10 //10 is TEXTAREAs border and padding
+      , height = Handsontable.Dom.outerHeight(this.TD) - 4  //$td.outerHeight() - 4
       , maxHeight = this.instance.view.maximumVisibleElementHeight(cellTopOffset) - 2; //10 is TEXTAREAs border and padding
 
     if (parseInt(this.TD.style.borderTopWidth, 10) > 0) {
@@ -7666,13 +6371,13 @@ Handsontable.helper.pageY = function (event) {
 
     Handsontable.Dom.enableImmediatePropagation(event);
 
-    if (event.target !== that.TEXTAREA || event.isImmediatePropagationStopped()) {
+    if (event.target !== that.TEXTAREA || event.isImmediatePropagationStopped()){
       return;
     }
 
     var keyCodes = Handsontable.helper.keyCode;
 
-    switch (event.keyCode) {
+    switch(event.keyCode) {
       case keyCodes.ENTER:
         that.close();
         event.preventDefault(); //don't add newline to field
@@ -7694,7 +6399,7 @@ Handsontable.helper.pageY = function (event) {
     this.updateEditorPosition();
   };
 
-  MobileTextEditor.prototype.focus = function () {
+  MobileTextEditor.prototype.focus = function(){
     this.TEXTAREA.focus();
     Handsontable.Dom.setCaretPosition(this.TEXTAREA, this.TEXTAREA.value.length);
   };
@@ -7712,13 +6417,13 @@ Handsontable.helper.pageY = function (event) {
   };
 
   MobileTextEditor.prototype.hideCellPointer = function () {
-    if (!Handsontable.Dom.hasClass(this.cellPointer, 'hidden')) {
+    if(!Handsontable.Dom.hasClass(this.cellPointer, 'hidden')) {
       Handsontable.Dom.addClass(this.cellPointer, 'hidden');
     }
   };
 
   MobileTextEditor.prototype.updateEditorPosition = function (x, y) {
-    if (x && y) {
+    if(x && y) {
       x = parseInt(x, 10);
       y = parseInt(y, 10);
 
@@ -7727,26 +6432,26 @@ Handsontable.helper.pageY = function (event) {
 
     } else {
       var selection = this.instance.getSelected()
-        , selectedCell = this.instance.getCell(selection[0], selection[1]);
+        , selectedCell = this.instance.getCell(selection[0],selection[1]);
 
       //cache sizes
-      if (!domDimensionsCache.cellPointer) {
+      if(!domDimensionsCache.cellPointer) {
         domDimensionsCache.cellPointer = {
           height: Handsontable.Dom.outerHeight(this.cellPointer),
           width: Handsontable.Dom.outerWidth(this.cellPointer)
         };
       }
-      if (!domDimensionsCache.editorContainer) {
+      if(!domDimensionsCache.editorContainer) {
         domDimensionsCache.editorContainer = {
           width: Handsontable.Dom.outerWidth(this.editorContainer)
         };
       }
 
-      if (selectedCell !== undefined) {
+      if(selectedCell !== undefined) {
         var scrollLeft = this.instance.view.wt.wtScrollbars.horizontal.scrollHandler == window ?
-          0 : Handsontable.Dom.getScrollLeft(this.instance.view.wt.wtScrollbars.horizontal.scrollHandler);
+              0 : Handsontable.Dom.getScrollLeft(this.instance.view.wt.wtScrollbars.horizontal.scrollHandler);
         var scrollTop = this.instance.view.wt.wtScrollbars.vertical.scrollHandler == window ?
-          0 : Handsontable.Dom.getScrollTop(this.instance.view.wt.wtScrollbars.vertical.scrollHandler);
+              0 : Handsontable.Dom.getScrollTop(this.instance.view.wt.wtScrollbars.vertical.scrollHandler);
 
         var selectedCellOffset = Handsontable.Dom.offset(selectedCell)
           , selectedCellWidth = Handsontable.Dom.outerWidth(selectedCell)
@@ -7756,18 +6461,18 @@ Handsontable.helper.pageY = function (event) {
           };
 
         this.editorContainer.style.top = parseInt(selectedCellOffset.top + Handsontable.Dom.outerHeight(selectedCell) -
-        currentScrollPosition.y + domDimensionsCache.cellPointer.height, 10) + "px";
+            currentScrollPosition.y + domDimensionsCache.cellPointer.height, 10) + "px";
         this.editorContainer.style.left = parseInt((window.innerWidth / 2) -
-        (domDimensionsCache.editorContainer.width / 2), 10) + "px";
+            (domDimensionsCache.editorContainer.width / 2) ,10) + "px";
 
-        if (selectedCellOffset.left + selectedCellWidth / 2 > parseInt(this.editorContainer.style.left, 10) + domDimensionsCache.editorContainer.width) {
+        if(selectedCellOffset.left + selectedCellWidth / 2 > parseInt(this.editorContainer.style.left,10) + domDimensionsCache.editorContainer.width) {
           this.editorContainer.style.left = window.innerWidth - domDimensionsCache.editorContainer.width + "px";
-        } else if (selectedCellOffset.left + selectedCellWidth / 2 < parseInt(this.editorContainer.style.left, 10) + 20) {
+        } else if(selectedCellOffset.left + selectedCellWidth / 2 < parseInt(this.editorContainer.style.left,10) + 20) {
           this.editorContainer.style.left = 0 + "px";
         }
 
         this.cellPointer.style.left = parseInt(selectedCellOffset.left - (domDimensionsCache.cellPointer.width / 2) -
-        Handsontable.Dom.offset(this.editorContainer).left + (selectedCellWidth / 2) - currentScrollPosition.x, 10) + "px";
+            Handsontable.Dom.offset(this.editorContainer).left + (selectedCellWidth / 2) - currentScrollPosition.x ,10) + "px";
       }
     }
   };
@@ -7804,22 +6509,14 @@ Handsontable.helper.pageY = function (event) {
   };
 
   MobileTextEditor.prototype.prepareAndSave = function () {
-    var val;
 
-    if (!this.valueChanged()) {
+    if(!this.valueChanged()) {
       return true;
     }
 
-    if (this.instance.getSettings().trimWhitespace) {
-      val = [
-        [String.prototype.trim.call(this.getValue())]
-      ];
-    } else {
-      val = [
-        [this.getValue()]
-      ];
-    }
-
+    var val = [
+      [String.prototype.trim.call(this.getValue())]
+    ];
 
     this.saveValue(val);
   };
@@ -7856,13 +6553,13 @@ Handsontable.helper.pageY = function (event) {
       if (event.touches.length == 1) {
         var touch = event.touches[0]
           , onTouchPosition = {
-            x: that.editorContainer.offsetLeft,
-            y: that.editorContainer.offsetTop
-          }
+          x: that.editorContainer.offsetLeft,
+          y: that.editorContainer.offsetTop
+        }
           , onTouchOffset = {
-            x: touch.pageX - onTouchPosition.x,
-            y: touch.pageY - onTouchPosition.y
-          };
+          x: touch.pageX - onTouchPosition.x,
+          y: touch.pageY - onTouchPosition.y
+        };
 
         that.eventManager.addEventListener(this, "touchmove", function (event) {
           var touch = event.touches[0];
@@ -7875,19 +6572,19 @@ Handsontable.helper.pageY = function (event) {
     });
 
     this.eventManager.addEventListener(document.body, "touchend", function (event) {
-      if (!Handsontable.Dom.isChildOf(event.target, that.editorContainer) && !Handsontable.Dom.isChildOf(event.target, that.instance.rootElement)) {
+      if(!Handsontable.Dom.isChildOf(event.target, that.editorContainer) && !Handsontable.Dom.isChildOf(event.target, that.instance.rootElement)) {
         that.close();
       }
     });
 
     this.eventManager.addEventListener(this.instance.view.wt.wtScrollbars.horizontal.scrollHandler, "scroll", function (event) {
-      if (that.instance.view.wt.wtScrollbars.horizontal.scrollHandler != window) {
+      if(that.instance.view.wt.wtScrollbars.horizontal.scrollHandler != window) {
         that.hideCellPointer();
       }
     });
 
     this.eventManager.addEventListener(this.instance.view.wt.wtScrollbars.vertical.scrollHandler, "scroll", function (event) {
-      if (that.instance.view.wt.wtScrollbars.vertical.scrollHandler != window) {
+      if(that.instance.view.wt.wtScrollbars.vertical.scrollHandler != window) {
         that.hideCellPointer();
       }
     });
@@ -7902,6 +6599,7 @@ Handsontable.helper.pageY = function (event) {
 
   Handsontable.editors.MobileTextEditor = MobileTextEditor;
   Handsontable.editors.registerEditor('mobile', Handsontable.editors.MobileTextEditor);
+
 
 
 })(Handsontable);
@@ -7938,13 +6636,17 @@ Handsontable.helper.pageY = function (event) {
 (function (Handsontable) {
   var DateEditor = Handsontable.editors.TextEditor.prototype.extend();
 
+  var $;
+
   DateEditor.prototype.init = function () {
-    if (typeof moment !== 'function') {
-      throw new Error("You need to include moment.js to your project.");
+    if (typeof jQuery != 'undefined') {
+      $ = jQuery;
+    } else {
+      throw new Error("You need to include jQuery to your project in order to use the jQuery UI Datepicker.");
     }
 
-    if (typeof Pikaday !== 'function') {
-      throw new Error("You need to include Pikaday to your project.");
+    if (!$.datepicker) {
+      throw new Error("jQuery UI Datepicker dependency not found. Did you forget to include jquery-ui.custom.js or its substitute?");
     }
 
     Handsontable.editors.TextEditor.prototype.init.apply(this, arguments);
@@ -7953,154 +6655,91 @@ Handsontable.helper.pageY = function (event) {
     var that = this;
 
     this.instance.addHook('afterDestroy', function () {
-      that.parentDestroyed = true;
       that.destroyElements();
     });
+
   };
 
   DateEditor.prototype.createElements = function () {
-    var that = this;
     Handsontable.editors.TextEditor.prototype.createElements.apply(this, arguments);
 
-    this.defaultDateFormat = 'DD/MM/YYYY';
     this.datePicker = document.createElement('DIV');
+    Handsontable.Dom.addClass(this.datePicker, 'htDatepickerHolder');
     this.datePickerStyle = this.datePicker.style;
     this.datePickerStyle.position = 'absolute';
     this.datePickerStyle.top = 0;
     this.datePickerStyle.left = 0;
-    this.datePickerStyle.zIndex = 9999;
-
-    Handsontable.Dom.addClass(this.datePicker, 'htDatepickerHolder');
+    this.datePickerStyle.zIndex = 99;
     document.body.appendChild(this.datePicker);
+    this.$datePicker = $(this.datePicker);
 
-    var htInput = this.instance.rootElement.querySelector('.handsontableInput');
-
+    var that = this;
     var defaultOptions = {
-      format: that.defaultDateFormat,
-      field: htInput,
-      trigger: htInput,
-      container: that.datePicker,
-      reposition: false,
-      bound: false,
+      dateFormat: "yy-mm-dd",
+      showButtonPanel: true,
+      changeMonth: true,
+      changeYear: true,
       onSelect: function (dateStr) {
-        if (!isNaN(dateStr.getTime())) {
-          dateStr = moment(dateStr).format(that.cellProperties.dateFormat || that.defaultDateFormat);
-        }
         that.setValue(dateStr);
-        that.hideDatepicker();
-      },
-      onClose: function () {
-        if(!that.parentDestroyed) {
-          that.finishEditing(false);
-        }
+        that.finishEditing(false);
       }
     };
-
-    this.$datePicker = new Pikaday(defaultOptions);
+    this.$datePicker.datepicker(defaultOptions);
 
     var eventManager = Handsontable.eventManager(this);
 
     /**
-     * Prevent recognizing clicking on datepicker as clicking outside of table
+     * Prevent recognizing clicking on jQuery Datepicker as clicking outside of table
      */
     eventManager.addEventListener(this.datePicker, 'mousedown', function (event) {
       Handsontable.helper.stopPropagation(event);
+      //event.stopPropagation();
     });
 
     this.hideDatepicker();
   };
 
   DateEditor.prototype.destroyElements = function () {
-    this.$datePicker.destroy();
+    this.$datePicker.datepicker('destroy');
+    this.$datePicker.remove();
+    //var eventManager = Handsontable.eventManager(this);
+    //eventManager.removeEventListener(this.datePicker, 'mousedown');
   };
 
-  DateEditor.prototype.prepare = function () {
-    this._opened = false;
-    Handsontable.editors.TextEditor.prototype.prepare.apply(this, arguments);
-  };
-
-  DateEditor.prototype.open = function (event) {
+  DateEditor.prototype.open = function () {
     Handsontable.editors.TextEditor.prototype.open.call(this);
-    this.showDatepicker(event);
-  };
-
-  DateEditor.prototype.close = function () {
-    var that = this;
-    this._opened = false;
-    this.instance._registerTimeout(setTimeout(function () {
-      that.instance.selection.refreshBorders();
-    }, 0));
-
-    Handsontable.editors.TextEditor.prototype.close.apply(this, arguments);
+    this.showDatepicker();
   };
 
   DateEditor.prototype.finishEditing = function (isCancelled, ctrlDown) {
-    if (isCancelled) { // pressed ESC, restore original value
-      //var value = this.instance.getDataAtCell(this.row, this.col);
-      var value = this.originalValue;
-      if (value !== void 0) {
-        this.setValue(value);
-      }
-    }
-
     this.hideDatepicker();
     Handsontable.editors.TextEditor.prototype.finishEditing.apply(this, arguments);
   };
 
-  DateEditor.prototype.showDatepicker = function (event) {
+  DateEditor.prototype.showDatepicker = function () {
     var offset = this.TD.getBoundingClientRect(),
-      dateFormat = this.cellProperties.dateFormat || this.defaultDateFormat,
-      datePickerConfig = this.$datePicker.config(),
-      dateStr,
-      isMouseDown = this.instance.view.isMouseDown(),
-      isMeta = event ? Handsontable.helper.isMetaKey(event.keyCode) : false;
+      DatepickerSettings,
+      datepickerSettings;
 
     this.datePickerStyle.top = (window.pageYOffset + offset.top + Handsontable.Dom.outerHeight(this.TD)) + 'px';
     this.datePickerStyle.left = (window.pageXOffset + offset.left) + 'px';
 
-    this.$datePicker._onInputFocus = function () {};
-    datePickerConfig.format = dateFormat;
+    DatepickerSettings = function () {};
+    DatepickerSettings.prototype = this.cellProperties;
+    datepickerSettings = new DatepickerSettings();
+    datepickerSettings.defaultDate = this.originalValue || void 0;
+    this.$datePicker.datepicker('option', datepickerSettings);
 
     if (this.originalValue) {
-      dateStr = this.originalValue;
-
-      if (moment(dateStr, dateFormat, true).isValid()) {
-        this.$datePicker.setMoment(moment(dateStr, dateFormat), true);
-      }
-
-      if (!isMeta) {
-        if (!isMouseDown) {
-          this.setValue('');
-        }
-      }
-
-    } else {
-      if (this.cellProperties.defaultDate) {
-        dateStr = this.cellProperties.defaultDate;
-
-        datePickerConfig.defaultDate = dateStr;
-
-        if (moment(dateStr, dateFormat, true).isValid()) {
-          this.$datePicker.setMoment(moment(dateStr, dateFormat), true);
-        }
-
-        if (!isMeta) {
-          if (!isMouseDown) {
-            this.setValue('');
-          }
-        }
-        //this.setValue(dateStr);
-      }
+      this.$datePicker.datepicker('setDate', this.originalValue);
     }
-
     this.datePickerStyle.display = 'block';
-    this.$datePicker.show();
   };
 
   DateEditor.prototype.hideDatepicker = function () {
     this.datePickerStyle.display = 'none';
-    this.$datePicker.hide();
   };
+
 
   Handsontable.editors.DateEditor = DateEditor;
   Handsontable.editors.registerEditor('date', DateEditor);
@@ -8581,7 +7220,7 @@ Handsontable.helper.pageY = function (event) {
       }
     });
 
-    for (i = 0, choicesCount = choicesRelevance.length; i < choicesCount; i++) {
+    for(i = 0, choicesCount = choicesRelevance.length; i < choicesCount; i++) {
       result.push(choicesRelevance[i].baseIndex);
     }
 
@@ -8847,59 +7486,9 @@ Handsontable.NumericValidator = function (value, callback) {
   if (value === null) {
     value = '';
   }
-  callback(/^-?\d*(\.|\,)?\d*$/.test(value));
+  //callback(/^-?\d*(\.|\,)?\d*$/.test(value));
+  callback(/^-?\d*(\.|\,)?\d*\s*%?\s*$/.test(value));
 };
-/**
- * Date cell validator
- * @param {*} value - Value of edited cell
- * @param {*} callback - Callback called with validation result
- */
-Handsontable.DateValidator = function (value, callback) {
-  console.log(value);
-  var correctedValue = null,
-    valid = true,
-    dateEditor = Handsontable.editors.getEditor('date', this.instance);
-
-  if (value === null) {
-    value = '';
-  }
-
-  var isValidDate = moment(new Date(value)).isValid(), // is value a valid date string
-    isValidFormat = moment(value, this.dateFormat || dateEditor.defaultDateFormat, true).isValid(); // is it in the specified format
-
-  if (!isValidDate) {
-    valid = false;
-  }
-
-  if (!isValidDate && isValidFormat) {
-    valid = true;
-  }
-
-  if (isValidDate && !isValidFormat) {
-    if (this.correctFormat === true) { // if format correction is enabled
-      correctedValue = correctFormat(value, this.dateFormat);
-      this.instance.setDataAtCell(this.row, this.col, correctedValue, 'dateValidator');
-      valid = true;
-    } else {
-      valid = false;
-    }
-  }
-
-  callback(valid);
-};
-
-/**
- * Format the given string using moment.js' format feature
- * @param value
- * @param dateFormat
- * @returns {*}
- */
-var correctFormat = function (value, dateFormat) {
-  value = moment(new Date(value)).format(dateFormat);
-  return value;
-};
-
-
 /**
  * Function responsible for validation of autocomplete value
  * @param {*} value - Value of edited cell
@@ -8976,7 +7565,6 @@ Handsontable.NumericCell = {
 
 Handsontable.DateCell = {
   editor: Handsontable.editors.DateEditor,
-  validator: Handsontable.DateValidator,
   renderer: Handsontable.renderers.AutocompleteRenderer //displays small gray arrow on right side of the cell
 };
 
@@ -9307,7 +7895,6 @@ var autoResize = function () {
  * In future we may implement a better driver when better APIs are available.
  *
  * @constructor
- * @private
  */
 var CopyPaste = (function () {
   var instance;
@@ -10058,610 +8645,74 @@ if (typeof exports !== "undefined") {
     exports.generate = jsonpatch.generate;
 }
 
-
-/**
- * @description
- * Handsontable events are the common interface that function in 2 ways: as __callbacks__ and as __plugin hooks__.
- *
- * @constructor Handsontable.Hooks
- * @example
- *
- * // __Using events as callbacks:__
- * ...
- * $('div#example1').handsontable({
- *   afterChange: function(changes, source) {
- *     $.ajax({
- *       url: "save.php",
- *       data: change
- *     });
- *   }
- * });
- * ...
- *
- * // __Using events as plugin hooks:__
- * ...
- * $('#example1').handsontable({
- *   'myPlugin': true
- * });
- *
- * $('#example2').handsontable({
- *   'myPlugin': false
- * });
- *
- * // global hook
- * Handsontable.PluginHooks.add('afterChange', function() {
- *   if(this.getSettings().myPlugin) {
- *     // function body - will only run in #example1
- *   }
- * });
- *
- * // local hook (has same effect as a callback)
- * $('#example2').handsontable('getInstance').addHook('afterChange', function() {
- *   // function body - will only run in #example2
- * });
- * ...
- */
 Handsontable.PluginHookClass = (function () {
 
   var Hooks = function () {
     return {
-      /**
-       * Callback fired before Walkontable instance is initiated.
-       *
-       * @since 0.11
-       * @event Handsontable.Hooks#beforeInitWalkontable
-       */
+      // Hooks
       beforeInitWalkontable: [],
-
-      /**
-       * @description
-       * Callback fired before Handsontable instance is initiated.
-       *
-       * __Note:__ This can be set only by global PluginHooks instance.
-       *
-       * @event Handsontable.Hooks#beforeInit
-       */
       beforeInit: [],
-
-      /**
-       * Callback fired before Handsontable table is rendered.
-       *
-       * @event Handsontable.Hooks#beforeRender
-       * @param {Boolean} isForced If true rendering was triggered by a change of settings or data; or false if
-       *                           rendering was triggered by scrolling or moving selection.
-       */
       beforeRender: [],
-
-      /**
-       * Callback fired before setting range is ended.
-       *
-       * @event Handsontable.Hooks#beforeSetRangeEnd
-       * @param {Array} coords WalkontableCellCoords array.
-       */
       beforeSetRangeEnd: [],
-
-      /**
-       * @event Handsontable.Hooks#beforeDrawBorders
-       */
       beforeDrawBorders: [],
-
-      /**
-       * Callback fired before one or more cells is changed. Its main purpose is to alter changes silently before input.
-       *
-       * @example
-       * // To disregard a single change, set changes[i] to null or remove it from array using changes.splice(i, 1).
-       * ...
-       * $('div#example1').handsontable({
-       *   beforeChange: function(changes, source) {
-       *     // [[row, prop, oldVal, newVal], ...]
-       *     changes[0] = null;
-       *   }
-       * });
-       * ...
-       *
-       * // To alter a single change, overwrite the desired value to changes[i][3].
-       * ...
-       * $('div#example1').handsontable({
-       *   beforeChange: function(changes, source) {
-       *     // [[row, prop, oldVal, newVal], ...]
-       *     changes[0][1] = 10;
-       *   }
-       * });
-       * ...
-       *
-       * // To cancel all edit, return false from the callback or set array length to 0 (changes.length = 0).
-       * ...
-       * $('div#example1').handsontable({
-       *   beforeChange: function(changes, source) {
-       *     // [[row, prop, oldVal, newVal], ...]
-       *     return false;
-       *   }
-       * });
-       * ...
-       *
-       * @event Handsontable.Hooks#beforeChange
-       * @param {Array} changes 2D array containing information about each of the edited cells.
-       * @param {String} source The name of a source of changes.
-       */
       beforeChange: [],
-
-      /**
-       * @event Handsontable.Hooks#beforeChangeRender
-       * @since 0.11
-       */
       beforeChangeRender: [],
-
-      /**
-       * Callback is fired when one or more columns are about to be removed.
-       *
-       * @event Handsontable.Hooks#beforeRemoveCol
-       * @param {Number} index Index of starter column.
-       * @param {Number} amount Amount of columns to be removed.
-       */
       beforeRemoveCol: [],
-
-      /**
-       * Callback is fired when one or more rows are about to be removed.
-       *
-       * @event Handsontable.Hooks#beforeRemoveRow
-       * @param {Number} index Index of starter column.
-       * @param {Number} amount Amount of columns to be removed.
-       */
       beforeRemoveRow: [],
-
-      /**
-       * @description
-       * A plugin hook executed before validator function, only if validator function is defined.
-       * This can be used to manipulate value of changed cell before it is applied to the validator function.
-       *
-       * __Notice:__ this will not affect values of changes. This will change value ONLY for validation!
-       *
-       * @event Handsontable.Hooks#beforeValidate
-       * @since 0.9.5
-       * @param {*} value
-       * @param {Number} row
-       * @param {String} prop
-       * @param {String} source
-       */
       beforeValidate: [],
-
-      /**
-       * Callback fired before getting cell settings.
-       *
-       * @event Handsontable.Hooks#beforeGetCellMeta
-       * @param {Number} row
-       * @param {Number} col
-       * @param {Object} cellProperties
-       */
       beforeGetCellMeta: [],
-
-      /**
-       * @event Handsontable.Hooks#beforeAutofill
-       * @param {Object} start Object containing information about first filled cell: `{row: 2, col: 0}`
-       * @param {Object} end Object containing information about last filled cell: `{row: 4, col: 1}`
-       * @param {Array} data 2D array containing information about fill pattern: `[["1", "Ted"], ["1", "John"]]`
-       */
       beforeAutofill: [],
-
-      /**
-       * Callback fired before keydown event is handled. It can be used to overwrite default key bindings.
-       * Caution - in your `beforeKeyDown` handler you need to call `event.stopImmediatePropagation()` to prevent default key behavior.
-       *
-       * @event Handsontable.Hooks#beforeKeyDown
-       * @since 0.9.0
-       * @param {Object} event Original DOM event
-       */
       beforeKeyDown: [],
-
-      /**
-       * @event Handsontable.Hooks#beforeOnCellMouseDown
-       */
       beforeOnCellMouseDown: [],
-
-      /**
-       * @event Handsontable.Hooks#beforeTouchScroll
-       */
       beforeTouchScroll: [],
-
-      /**
-       * Callback fired after Handsontable instance is initiated.
-       *
-       * @event Handsontable.Hooks#afterInit
-       */
       afterInit : [],
-
-      /**
-       * Callback fired after new data is loaded (by `loadData` method) into the data source array.
-       *
-       * @event Handsontable.Hooks#afterLoadData
-       */
       afterLoadData : [],
-
-      /**
-       * @event Handsontable.Hooks#afterLoadData
-       */
       afterUpdateSettings: [],
-
-      /**
-       * Callback fired after Handsontable table is rendered.
-       *
-       * @event Handsontable.Hooks#afterRender
-       * @param {Boolean} isForced Is `true` if rendering was triggered by a change of settings or data; or `false` if
-       *                           rendering was triggered by scrolling or moving selection.
-       */
       afterRender : [],
-
-      /**
-       * @event Handsontable.Hooks#afterRenderer
-       * @since 0.11
-       * @param {Object} TD
-       * @param {Number} row
-       * @param {Number} col
-       * @param {String} prop
-       * @param {String} value
-       * @param {Object} cellProperties
-       */
       afterRenderer : [],
-
-      /**
-       * @description
-       * Callback fired after one or more cells is changed. Its main use case is to save the input.
-       *
-       * __Note:__ For performance reasons, the `changes` array is null for `"loadData"` source.
-       *
-       * @event Handsontable.Hooks#afterChange
-       * @param {Array} changes 2D array containing information about each of the edited cells `[[row, prop, oldVal, newVal], ...]`
-       * @param {String} source Is one of the strings: `"alter", "empty", "edit", "populateFromArray", "loadData", "autofill", "paste"`.
-       */
       afterChange : [],
-
-      /**
-       * @description
-       * A plugin hook executed after validator function, only if validator function is defined.
-       * Validation result is the first parameter. This can be used to determinate if validation passed successfully or not.
-       *
-       * __You can cancel current change by returning false.__
-       *
-       * @event Handsontable.Hooks#afterValidate
-       * @since 0.9.5
-       * @param {Boolean} isValid
-       * @param {*} value
-       * @param {Number} row
-       * @param {String} prop
-       * @param {String} source
-       */
       afterValidate: [],
-
-      /**
-       * Callback fired after getting cell settings.
-       *
-       * @event Handsontable.Hooks#afterGetCellMeta
-       * @param {Number} row
-       * @param {Number} col
-       * @param {Object} cellProperties
-       */
       afterGetCellMeta: [],
-
-      /**
-       * Called after cell meta was changed, e.g. using the context menu.
-       *
-       * @event Handsontable.Hooks#afterSetCellMeta
-       * @since 0.11.0
-       * @param {Number} row
-       * @param {Number} col
-       * @param {String} key
-       * @param {*} value
-       */
       afterSetCellMeta: [],
-
-      /**
-       * Callback fired after getting info about column header.
-       *
-       * @event Handsontable.Hooks#afterGetColHeader
-       * @param {Number} col
-       * @param {Element} TH
-       */
       afterGetColHeader: [],
-
-      /**
-       * @event Handsontable.Hooks#afterGetRowHeader
-       */
       afterGetRowHeader: [],
-
-      /**
-       * Callback fired after destroing Handsontable instance.
-       *
-       * @event Handsontable.Hooks#afterDestroy
-       */
       afterDestroy: [],
-
-      /**
-       * Callback is fired when one or more rows are removed.
-       *
-       * @event Handsontable.Hooks#afterRemoveRow
-       * @param {Number} index Is an index of starter row.
-       * @param {Number} amount Is an anount of removed rows.
-       */
       afterRemoveRow: [],
-
-      /**
-       * Callback is fired when a new row is created.
-       *
-       * @event Handsontable.Hooks#afterCreateRow
-       * @param {Number} index Represents the index of first newly created row in the data source array.
-       * @param {Number} amount Number of newly created rows in the data source array.
-       */
       afterCreateRow: [],
-
-      /**
-       * Callback is fired when one or more columns are removed.
-       *
-       * @event Handsontable.Hooks#afterRemoveCol
-       * @param {Number} index Is an index of starter column.
-       * @param {Number} amount Is an amount of removed columns.
-       */
       afterRemoveCol: [],
-
-      /**
-       * Callback is fired when a new column is created.
-       *
-       * @event Handsontable.Hooks#afterCreateCol
-       * @param {Number} index Represents the index of first newly created column in the data source array.
-       * @param {Number} amount Number of newly created columns in the data source array.
-       */
       afterCreateCol: [],
-
-      /**
-       * Event called when current cell is deselected.
-       *
-       * @event Handsontable.Hooks#afterDeselect
-       */
       afterDeselect: [],
-
-      /**
-       * Callback fired while one or more cells are being selected (on mouse move).
-       *
-       * @event Handsontable.Hooks#afterSelection
-       * @param {Number} r Selection start row
-       * @param {Number} c Selection start column
-       * @param {Number} r2 Selection end row
-       * @param {Number} c2 Selection end column
-       */
       afterSelection: [],
-
-      /**
-       * The same as above, but data source object property name is used instead of the column number.
-       *
-       * @event Handsontable.Hooks#afterSelectionByProp
-       * @param {Number} r Selection start row
-       * @param {String} p Selection start data source object property
-       * @param {Number} r2 Selection end row
-       * @param {String} p2 Selection end data source object property
-       */
       afterSelectionByProp: [],
-
-      /**
-       * Callback fired after one or more cells are selected (on mouse up).
-       *
-       * @event Handsontable.Hooks#afterSelectionEnd
-       * @param {Number} r Selection start row
-       * @param {Number} c Selection start column
-       * @param {Number} r2 Selection end row
-       * @param {Number} c2 Selection end column
-       */
       afterSelectionEnd: [],
-
-      /**
-       * The same as above, but data source object property name is used instead of the column number.
-       *
-       * @event Handsontable.Hooks#afterSelectionEndByProp
-       * @param {Number} r Selection start row
-       * @param {String} p Selection start data source object property
-       * @param {Number} r2 Selection end row
-       * @param {String} p2 Selection end data source object property
-       */
       afterSelectionEndByProp: [],
-
-      /**
-       * Callback fired after clicking on a cell or row/column header.
-       * In case the row/column header was clicked, the index is negative.
-       * For example clicking on the row header of cell (0, 0) results with `afterOnCellMouseDown` called with coords `{row: 0, col: -1}`.
-       *
-       * @event Handsontable.Hooks#afterOnCellMouseDown
-       * @since 0.11
-       * @param {Object} event
-       * @param {Object} coords
-       * @param {Object} TD
-       */
       afterOnCellMouseDown: [],
-
-      /**
-       * Callback fired after hovering a cell or row/column header with the mouse cursor.
-       * In case the row/column header was hovered, the index is negative.
-       * For example clicking on the row header of cell (0, 0) results with `afterOnCellMouseOver` called with coords `{row: 0, col: -1}`.
-       *
-       * @event Handsontable.Hooks#afterOnCellMouseOver
-       * @since 0.11
-       * @param {Object} event
-       * @param {Object} coords
-       * @param {Object} TD
-       */
       afterOnCellMouseOver: [],
-
-      /**
-       * @event Handsontable.Hooks#afterOnCellCornerMouseDown
-       * @since 0.11
-       * @param {Object} event
-       */
       afterOnCellCornerMouseDown: [],
-
-      /**
-       * @event Handsontable.Hooks#afterScrollVertically
-       * @since 0.11
-       */
       afterScrollVertically: [],
-
-      /**
-       * @event Handsontable.Hooks#afterScrollHorizontally
-       * @since 0.11
-       */
       afterScrollHorizontally: [],
-
-      /**
-       * Callback fired after reset cell's meta.
-       *
-       * @event Handsontable.Hooks#afterCellMetaReset
-       * @since 0.11
-       */
       afterCellMetaReset: [],
-
-      /**
-       * @event Handsontable.Hooks#afterIsMultipleSelectionCheck
-       */
       afterIsMultipleSelectionCheck: [],
-
-      /**
-       * @event Handsontable.Hooks#afterDocumentKeyDown
-       */
       afterDocumentKeyDown: [],
-
-      /**
-       * @event Handsontable.Hooks#afterMomentumScroll
-       */
       afterMomentumScroll: [],
-      beforeCellAlignment: [],
 
-      /**
-       * Callback fired after modify column's width.
-       *
-       * @event Handsontable.Hooks#modifyColWidth
-       * @since 0.11
-       * @param {Number} width
-       * @param {Number} col
-       */
+      // Modifiers
       modifyColWidth: [],
-
-      /**
-       * Callback fired after modify height of row.
-       *
-       * @event Handsontable.Hooks#modifyRowHeight
-       * @since 0.11
-       * @param {Number} height
-       * @param {Number} row
-       */
       modifyRowHeight: [],
-
-      /**
-       * Callback fired after row modify.
-       *
-       * @event Handsontable.Hooks#modifyRow
-       * @since 0.11
-       * @param {Number} row
-       */
       modifyRow: [],
-
-      /**
-       * Callback fired after column modify.
-       *
-       * @event Handsontable.Hooks#modifyCol
-       * @since 0.11
-       * @param {Number} col
-       */
       modifyCol: []
     };
   };
 
   var legacy = {
-    /**
-     * Now event is called {@link event:modifyCol}.
-     *
-     * @event Handsontable.Hooks#onBeforeChange
-     * @deprecated
-     * @param {Array} changes
-     * @param {String} source
-     */
     onBeforeChange: "beforeChange",
-
-    /**
-     * Now event is called {@link event:afterChange}.
-     *
-     * @event Handsontable.Hooks#onChange
-     * @deprecated
-     * @param {Array} changes
-     * @param {String} source
-     */
     onChange: "afterChange",
-
-    /**
-     * @event Handsontable.Hooks#onCreateRow
-     * @deprecated
-     */
     onCreateRow: "afterCreateRow",
-
-    /**
-     * @event Handsontable.Hooks#onCreateCol
-     * @deprecated
-     */
     onCreateCol: "afterCreateCol",
-
-    /**
-     * Now event is called {@link event:afterSelection}.
-     *
-     * @event Handsontable.Hooks#onSelection
-     * @deprecated
-     * @param {Number} r
-     * @param {Number} c
-     * @param {Number} r2
-     * @param {Number} c2
-     */
     onSelection: "afterSelection",
-
-    /**
-     * Now event is called {@link event:afterCopyLimit}.
-     *
-     * @event Handsontable.Hooks#onCopyLimit
-     * @deprecated
-     * @param {Number} selectedRowsCount
-     * @param {Number} selectedColsCount
-     * @param {Number} copyRowsLimit
-     * @param {Number} copyColsLimit
-     */
     onCopyLimit: "afterCopyLimit",
-
-    /**
-     * Now event is called {@link event:afterSelectionEnd}.
-     *
-     * @event Handsontable.Hooks#onSelectionEnd
-     * @deprecated
-     * @param {Number} r
-     * @param {Number} c
-     * @param {Number} r2
-     * @param {Number} c2
-     */
     onSelectionEnd: "afterSelectionEnd",
-
-    /**
-     * Now event is called {@link event:afterSelectionByProp}.
-     *
-     * @event Handsontable.Hooks#onSelectionByProp
-     * @deprecated
-     * @param {Number} r
-     * @param {String} p
-     * @param {Number} r2
-     * @param {String} p2
-     */
     onSelectionByProp: "afterSelectionByProp",
-
-    /**
-     * Now event is called {@link event:afterSelectionEndByProp}.
-     *
-     * @event Handsontable.Hooks#onSelectionEndByProp
-     * @deprecated
-     * @param {Number} r
-     * @param {String} p
-     * @param {Number} r2
-     * @param {String} p2
-     */
     onSelectionEndByProp: "afterSelectionEndByProp"
   };
 
@@ -10674,14 +8725,6 @@ Handsontable.PluginHookClass = (function () {
 
   }
 
-  /**
-   * Get hook bucket based on Handsontable instance or if instance is `undefined` get global hook bucked.
-   *
-   * @memberof Handsontable.Hooks#
-   * @function getBucket
-   * @param {Object} instance Instance of Handsontable
-   * @returns {Object} Returns global or handsontable instance bucket
-   */
   PluginHookClass.prototype.getBucket = function (instance) {
     if(instance) {
       if(!instance.pluginHookBucket) {
@@ -10692,14 +8735,6 @@ Handsontable.PluginHookClass = (function () {
     return this.globalBucket;
   };
 
-  /**
-   * @memberof Handsontable.Hooks#
-   * @function add
-   * @param {String} key Hook/Event name
-   * @param {Function} fn Callback function
-   * @param {Object} instance Instance of Handsontable
-   * @returns {Handsontable.Hooks} Instance of Handsontable.Hooks
-   */
   PluginHookClass.prototype.add = function (key, fn, instance) {
     //if fn is array, run this for all the array items
     if (Array.isArray(fn)) {
@@ -10728,13 +8763,6 @@ Handsontable.PluginHookClass = (function () {
     return this;
   };
 
-  /**
-   * @memberof Handsontable.Hooks#
-   * @function once
-   * @param {String} key Hook/Event name
-   * @param {Function} fn Callback function
-   * @param {Object} instance of Handsontable
-   */
   PluginHookClass.prototype.once = function(key, fn, instance){
 
     if(Array.isArray(fn)){
@@ -10752,14 +8780,6 @@ Handsontable.PluginHookClass = (function () {
 
   };
 
-  /**
-   * @memberof Handsontable.Hooks#
-   * @function remove
-   * @param {String} key Hook/Event name
-   * @param {Function} fn Callback function
-   * @param {Object} instance of Handsontable
-   * @return {Boolean}
-   */
   PluginHookClass.prototype.remove = function (key, fn, instance) {
     var status = false;
 
@@ -10787,19 +8807,17 @@ Handsontable.PluginHookClass = (function () {
     return status;
   };
 
-  /**
-   * @memberof Handsontable.Hooks#
-   * @function run
-   * @param {Object} instance of Handsontable
-   * @param {String} key Hook/Event name
-   * @param {*} p1
-   * @param {*} p2
-   * @param {*} p3
-   * @param {*} p4
-   * @param {*} p5
-   * @param {*} p6
-   * @returns {*}
-   */
+  PluginHookClass.prototype.destroy = function (instance) {
+    var bucket = this.getBucket(instance);
+    for (var key in bucket) {
+      if (bucket.hasOwnProperty(key)) {
+        for (var i = 0, leni = bucket[key].length; i < leni; i++) {
+          this.remove(key, bucket[key], instance);
+        }
+      }
+    }
+  };
+
   PluginHookClass.prototype.run = function (instance, key, p1, p2, p3, p4, p5, p6) {
     // provide support for old versions of HOT
     if (key in legacy) {
@@ -10835,25 +8853,10 @@ Handsontable.PluginHookClass = (function () {
     return p1;
   };
 
-  PluginHookClass.prototype.destroy = function (instance) {
-    var bucket = this.getBucket(instance);
-    for (var key in bucket) {
-      if (bucket.hasOwnProperty(key)) {
-        for (var i = 0, leni = bucket[key].length; i < leni; i++) {
-          this.remove(key, bucket[key], instance);
-        }
-      }
-    }
-  };
-
   /**
    * Registers a hook name (adds it to the list of the known hook names). Used by plugins. It is not neccessary to call,
    * register, but if you use it, your plugin hook will be used returned by getRegistered
    * (which itself is used in the demo http://handsontable.com/demo/callbacks.html)
-   *
-   * @memberof Handsontable.Hooks#
-   * @function register
-   * @private
    * @param key {String}
    */
   PluginHookClass.prototype.register = function (key) {
@@ -10864,10 +8867,6 @@ Handsontable.PluginHookClass = (function () {
 
   /**
    * Deregisters a hook name (removes it from the list of known hook names)
-   *
-   * @memberof Handsontable.Hooks#
-   * @function deregister
-   * @private
    * @param key {String}
    */
   PluginHookClass.prototype.deregister = function (key) {
@@ -10876,10 +8875,6 @@ Handsontable.PluginHookClass = (function () {
 
   /**
    * Returns boolean information if a hook by such name has been registered
-   *
-   * @memberof Handsontable.Hooks#
-   * @function isRegistered
-   * @private
    * @param key {String}
    */
   PluginHookClass.prototype.isRegistered = function (key) {
@@ -10888,10 +8883,6 @@ Handsontable.PluginHookClass = (function () {
 
   /**
    * Returns an array of registered hooks
-   *
-   * @memberof Handsontable.Hooks#
-   * @function getRegistered
-   * @private
    * @returns {Array}
    */
   PluginHookClass.prototype.getRegistered = function () {
@@ -10905,21 +8896,12 @@ Handsontable.PluginHookClass = (function () {
 Handsontable.hooks = new Handsontable.PluginHookClass();
 Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to legacy.js
 
-/**
- * @plugin
- * @class Handsontable.AutoColumnSize
- */
 (function (Handsontable) {
 
   function HandsontableAutoColumnSize() {
     var plugin = this
       , sampleCount = 5; //number of samples to take of each value length
 
-    /**
-     * @private
-     * @function beforeInit
-     * @memberof Handsontable.AutoColumnSize#
-     */
     this.beforeInit = function () {
       var instance = this;
       instance.autoColumnWidths = [];
@@ -10940,13 +8922,6 @@ Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to leg
           instance.addHook('modifyColWidth', htAutoColumnSize.modifyColWidth);
           instance.addHook('afterDestroy', htAutoColumnSize.afterDestroy);
 
-          /**
-           * {@link Handsontable.AutoColumnSize#determineColumnWidth}
-           *
-           * @function determineColumnWidth
-           * @alias determineColumnWidth
-           * @memberof! Handsontable.Core#
-           */
           instance.determineColumnWidth = plugin.determineColumnWidth;
         }
       } else {
@@ -10962,26 +8937,12 @@ Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to leg
       }
     };
 
-    /**
-     * @private
-     * @function determineIfChanged
-     * @memberof Handsontable.AutoColumnSize#
-     * @param {Boolean} [force]
-     */
     this.determineIfChanged = function (force) {
       if (force) {
         htAutoColumnSize.determineColumnsWidth.apply(this, arguments);
       }
     };
 
-    /**
-     * Get width column.
-     *
-     * @function determineColumnWidth
-     * @memberof Handsontable.AutoColumnSize#
-     * @param {Number} col
-     * @returns {Number}
-     */
     this.determineColumnWidth = function (col) {
       var instance = this
         , tmp = instance.autoColumnSizeTmp;
@@ -11051,11 +9012,6 @@ Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to leg
       return width;
     };
 
-    /**
-     * @private
-     * @function determineColumnsWidth
-     * @memberof Handsontable.AutoColumnSize#
-     */
     this.determineColumnsWidth = function () {
       var instance = this;
       var settings = this.getSettings();
@@ -11069,14 +9025,6 @@ Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to leg
       }
     };
 
-    /**
-     * @private
-     * @function modifyColWidth
-     * @memberof Handsontable.AutoColumnSize#
-     * @param {Number} width
-     * @param {Number} col
-     * @returns {Number}
-     */
     this.modifyColWidth = function (width, col) {
       if (this.autoColumnWidths[col] && this.autoColumnWidths[col] > width) {
         return this.autoColumnWidths[col];
@@ -11084,11 +9032,6 @@ Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to leg
       return width;
     };
 
-    /**
-     * @private
-     * @function afterDestroy
-     * @memberof Handsontable.AutoColumnSize#
-     */
     this.afterDestroy = function () {
       var instance = this;
       if (instance.autoColumnSizeTmp && instance.autoColumnSizeTmp.container && instance.autoColumnSizeTmp.container.parentNode) {
@@ -11131,7 +9074,6 @@ Handsontable.PluginHooks = Handsontable.hooks; //in future move this line to leg
 /**
  * This plugin sorts the view by a column (but does not sort the data source!)
  * @constructor
- * @private
  */
 function HandsontableColumnSorting() {
   var plugin = this;
@@ -11305,16 +9247,16 @@ function HandsontableColumnSorting() {
       return 0;
     };
   }
-
-    /* MOD by Frederic Aoustin
+  
+  /* MOD by Frederic Aoustin
    * Sort numbers correctly
    */
    
   function numberSort(sortOrder) {
     return function (a, b) {
-    var aNumber = parseFloat(a[1]) || 0;
-    var bNumber = parseFloat(b[1]) || 0;
-  
+	  var aNumber = parseFloat(a[1]) || 0;
+	  var bNumber = parseFloat(b[1]) || 0;
+	
       if (aNumber < bNumber) {
         return sortOrder ? -1 : 1;
       }
@@ -11340,17 +9282,17 @@ function HandsontableColumnSorting() {
         return -1;
       }
 
-      /* MOD by Frederic Aoustin
-     * Sort dates correctly
-     * Needs Moment.js
-     */
-    var aDate = moment(a[1], "DD/MM/YYYY");
-    var bDate = moment(b[1], "DD/MM/YYYY");
-    /* END of Mod
-     * Old code
+	  /* MOD by Frederic Aoustin
+	   * Sort dates correctly
+	   * Needs Moment.js
+	   */
+	  var aDate = moment(a[1], "DD/MM/YYYY");
+	  var bDate = moment(b[1], "DD/MM/YYYY");
+	  /* END of Mod
+	   * Old code
       var aDate = new Date(a[1]);
       var bDate = new Date(b[1]);
-    */
+	  */
 
       if (aDate < bDate) {
         return sortOrder ? -1 : 1;
@@ -11384,14 +9326,14 @@ function HandsontableColumnSorting() {
       case 'date':
         sortFunction = dateSort;
         break;
-        /* MOD by Frederic Aoustin
-         * Sort numbers correctly
-         */
-      case 'numeric':
-        sortFunction = numberSort;
-        break;
-        /* END of MOD
-         */
+	  /* MOD by Frederic Aoustin
+	   * Sort numbers correctly
+	   */
+	  case 'numeric':
+		sortFunction = numberSort;
+		break;
+	  /* END of MOD
+	   */
       default:
         sortFunction = defaultSort;
     }
@@ -11558,23 +9500,6 @@ Handsontable.hooks.register('afterColumnSort');
     return className;
   }
 
-  function getAlignmentClasses(range) {
-    var classesArray = {};
-    /* jshint ignore:start */
-    for (var row = range.from.row; row <= range.to.row; row++) {
-      for (var col = range.from.col; col <= range.to.col; col++) {
-
-        if(!classesArray[row]) {
-          classesArray[row] = [];
-        }
-        classesArray[row][col] = this.getCellMeta(row,col).className;
-      }
-    }
-    /* jshint ignore:end */
-
-    return classesArray;
-  }
-
   function doAlign(row, col, type, alignment) {
     /* jshint ignore:start */
     var cellMeta = this.getCellMeta(row, col),
@@ -11589,15 +9514,11 @@ Handsontable.hooks.register('afterColumnSort');
     }
 
     this.setCellMeta(row, col, 'className', className);
-    /* jshint ignore:end */
+
   }
 
   function align(range, type, alignment) {
     /* jshint ignore:start */
-
-    var stateBefore = getAlignmentClasses.call(this, range);
-    this.runHooks('beforeCellAlignment', stateBefore, range, type, alignment);
-
     if (range.from.row == range.to.row && range.from.col == range.to.col) {
       doAlign.call(this, range.from.row, range.from.col, type, alignment);
     } else {
@@ -11609,7 +9530,7 @@ Handsontable.hooks.register('afterColumnSort');
     }
 
     this.render();
-
+    
     /* jshint ignore:end */
   }
 
@@ -12012,15 +9933,7 @@ Handsontable.hooks.register('afterColumnSort');
         if (event.target.nodeName != 'TD' && !(Handsontable.Dom.hasClass(event.target, 'current') && Handsontable.Dom.hasClass(event.target, 'wtBorder'))) {
           return;
         }
-      } else if(showRowHeaders && showColHeaders) {
-
-        // do nothing after right-click on corner header
-        var containsCornerHeader = event.target.parentNode.querySelectorAll('.cornerHeader').length > 0;
-        if (containsCornerHeader) {
-          return;
-        }
       }
-
       var menu = this.createMenu();
       var items = this.getItems(settings.contextMenu);
 
@@ -12645,10 +10558,6 @@ Handsontable.hooks.register('afterColumnSort');
     if (menu.parentNode) {
       this.menu.parentNode.removeChild(menu);
     }
-  };
-
-  ContextMenu.prototype.align = function(range, type, alignment) {
-    align.call(this, range, type, alignment);
   };
 
   ContextMenu.SEPARATOR = {name: "---------"};
@@ -14071,10 +11980,7 @@ function Storage(prefix) {
 })(Storage);
 
 /**
- * Handsontable UndoRedo plugin class
- *
- * @plugin
- * @class Handsontable.UndoRedo
+ * Handsontable UndoRedo class
  */
 (function(Handsontable){
   Handsontable.UndoRedo = function (instance) {
@@ -14135,11 +12041,6 @@ function Storage(prefix) {
       var action = new Handsontable.UndoRedo.RemoveColumnAction(index, removedData, headers);
       plugin.done(action);
     });
-
-    instance.addHook("beforeCellAlignment", function (stateBefore, range, type, alignment) {
-      var action = new Handsontable.UndoRedo.CellAlignmentAction(stateBefore, range, type, alignment);
-      plugin.done(action);
-    });
   };
 
   Handsontable.UndoRedo.prototype.done = function (action) {
@@ -14150,7 +12051,7 @@ function Storage(prefix) {
   };
 
   /**
-   * Undo last edit.
+   * Undo operation from current revision
    */
   Handsontable.UndoRedo.prototype.undo = function () {
     if (this.isUndoAvailable()) {
@@ -14169,7 +12070,7 @@ function Storage(prefix) {
   };
 
   /**
-   * Redo edit (used to reverse an undo).
+   * Redo operation from current revision
    */
   Handsontable.UndoRedo.prototype.redo = function () {
     if (this.isRedoAvailable()) {
@@ -14188,25 +12089,23 @@ function Storage(prefix) {
   };
 
   /**
-   * Check if undo action is available.
-   *
-   * @return {Boolean} Return `true` if undo can be performed, `false` otherwise
+   * Returns true if undo point is available
+   * @return {Boolean}
    */
   Handsontable.UndoRedo.prototype.isUndoAvailable = function () {
     return this.doneActions.length > 0;
   };
 
   /**
-   * Check if redo action is available.
-   *
-   * @return {Boolean} Return `true` if redo can be performed, `false` otherwise.
+   * Returns true if redo point is available
+   * @return {Boolean}
    */
   Handsontable.UndoRedo.prototype.isRedoAvailable = function () {
     return this.undoneActions.length > 0;
   };
 
   /**
-   * Clears undo history.
+   * Clears undo history
    */
   Handsontable.UndoRedo.prototype.clear = function () {
     this.doneActions.length = 0;
@@ -14276,12 +12175,6 @@ function Storage(prefix) {
   };
   Handsontable.helper.inherit(Handsontable.UndoRedo.CreateRowAction, Handsontable.UndoRedo.Action);
   Handsontable.UndoRedo.CreateRowAction.prototype.undo = function (instance, undoneCallback) {
-    var rowCount = instance.countRows(),
-      minSpareRows = instance.getSettings().minSpareRows;
-    if(this.index >= rowCount && this.index - minSpareRows < rowCount) {
-      this.index -= minSpareRows; // work around the situation where the needed row was removed due to an 'undo' of a made change
-    }
-
     instance.addHookOnce('afterRemoveRow', undoneCallback);
     instance.alter('remove_row', this.index, this.amount);
   };
@@ -14321,41 +12214,6 @@ function Storage(prefix) {
   Handsontable.UndoRedo.CreateColumnAction.prototype.redo = function (instance, redoneCallback) {
     instance.addHookOnce('afterCreateCol', redoneCallback);
     instance.alter('insert_col', this.index + 1, this.amount);
-  };
-
-  Handsontable.UndoRedo.CellAlignmentAction = function (stateBefore, range, type, alignment) {
-    this.stateBefore = stateBefore;
-    this.range = range;
-    this.type = type;
-    this.alignment = alignment;
-  };
-  Handsontable.UndoRedo.CellAlignmentAction.prototype.undo = function(instance, undoneCallback) {
-    if (!instance.contextMenu) {
-      return;
-    }
-
-    for (var row = this.range.from.row; row <= this.range.to.row; row++) {
-      for (var col = this.range.from.col; col <= this.range.to.col; col++) {
-        instance.setCellMeta(row, col, 'className', this.stateBefore[row][col] || ' htLeft');
-      }
-    }
-
-    instance.addHookOnce('afterRender', undoneCallback);
-    instance.render();
-  };
-  Handsontable.UndoRedo.CellAlignmentAction.prototype.redo = function(instance, undoneCallback) {
-    if (!instance.contextMenu) {
-      return;
-    }
-
-    for (var row = this.range.from.row; row <= this.range.to.row; row++) {
-      for (var col = this.range.from.col; col <= this.range.to.col; col++) {
-        instance.contextMenu.align.call(instance, this.range, this.type, this.alignment);
-      }
-    }
-
-    instance.addHookOnce('afterRender', undoneCallback);
-    instance.render();
   };
 
   Handsontable.UndoRedo.RemoveColumnAction = function (index, data, headers) {
@@ -14400,13 +12258,6 @@ function Storage(prefix) {
 
     if(pluginEnabled){
       if(!instance.undoRedo){
-        /**
-         * Instance of Handsontable.UndoRedo Plugin {@link Handsontable.UndoRedo}
-         *
-         * @alias undoRedo
-         * @memberof! Handsontable.Core#
-         * @type {UndoRedo}
-         */
         instance.undoRedo = new Handsontable.UndoRedo(instance);
 
         exposeUndoRedoMethods(instance);
@@ -14450,48 +12301,23 @@ function Storage(prefix) {
     }
   }
 
-  function exposeUndoRedoMethods(instance) {
-    /**
-     * {@link Handsontable.UndoRedo#undo}
-     * @alias undo
-     * @memberof! Handsontable.Core#
-     */
+  function exposeUndoRedoMethods(instance){
     instance.undo = function(){
       return instance.undoRedo.undo();
     };
 
-    /**
-     * {@link Handsontable.UndoRedo#redo}
-     * @alias redo
-     * @memberof! Handsontable.Core#
-     */
     instance.redo = function(){
       return instance.undoRedo.redo();
     };
 
-    /**
-     * {@link Handsontable.UndoRedo#isUndoAvailable}
-     * @alias isUndoAvailable
-     * @memberof! Handsontable.Core#
-     */
     instance.isUndoAvailable = function(){
       return instance.undoRedo.isUndoAvailable();
     };
 
-    /**
-     * {@link Handsontable.UndoRedo#isRedoAvailable}
-     * @alias isRedoAvailable
-     * @memberof! Handsontable.Core#
-     */
     instance.isRedoAvailable = function(){
       return instance.undoRedo.isRedoAvailable();
     };
 
-    /**
-     * {@link Handsontable.UndoRedo#clear}
-     * @alias clearUndo
-     * @memberof! Handsontable.Core#
-     */
     instance.clearUndo = function(){
       return instance.undoRedo.clear();
     };
@@ -14513,7 +12339,6 @@ function Storage(prefix) {
 /**
  * Plugin used to scroll Handsontable by selecting a cell and dragging outside of visible viewport
  * @constructor
- * @private
  */
 function DragToScroll() {
   this.boundaries = null;
@@ -14630,12 +12455,6 @@ if (typeof Handsontable !== 'undefined') {
   Handsontable.plugins.DragToScroll = DragToScroll;
 }
 
-/**
- * This plugin provides copy and paste functionalities.
- *
- * @plugin
- * @class Handsontable.CopyPaste
- */
 (function (Handsontable, CopyPaste, SheetClip) {
 
   function CopyPastePlugin(instance) {
@@ -14714,12 +12533,6 @@ if (typeof Handsontable !== 'undefined') {
       }
     }
 
-    /**
-     * Destroy plugin instance.
-     *
-     * @function destroy
-     * @memberof Handsontable.CopyPaste#
-     */
     this.destroy = function () {
       this.copyPasteInstance.removeCallback(onCut);
       this.copyPasteInstance.removeCallback(onPaste);
@@ -14729,23 +12542,11 @@ if (typeof Handsontable !== 'undefined') {
 
     instance.addHook('afterDestroy', Handsontable.helper.proxy(this.destroy, this));
 
-    /**
-     * @function triggerPaste
-     * @memberof Handsontable.CopyPaste#
-     */
     this.triggerPaste = Handsontable.helper.proxy(this.copyPasteInstance.triggerPaste, this.copyPasteInstance);
-
-    /**
-     * @function triggerCut
-     * @memberof Handsontable.CopyPaste#
-     */
     this.triggerCut = Handsontable.helper.proxy(this.copyPasteInstance.triggerCut, this.copyPasteInstance);
 
     /**
-     * Prepares copyable text in the invisible textarea.
-     *
-     * @function setCopyable
-     * @memberof Handsontable.CopyPaste#
+     * Prepares copyable text in the invisible textarea
      */
     this.setCopyableText = function () {
       var settings = instance.getSettings();
@@ -14770,23 +12571,11 @@ if (typeof Handsontable !== 'undefined') {
     };
   }
 
-  /**
-   * Init plugin
-   *
-   * @function init
-   * @memberof Handsontable.CopyPaste#
-   */
   function init() {
     var instance  = this,
       pluginEnabled = instance.getSettings().copyPaste !== false;
 
     if (pluginEnabled && !instance.copyPaste) {
-      /**
-       * Instance of CopyPaste Plugin {@link Handsontable.CopyPaste}
-       * @alias copyPaste
-       * @memberof! Handsontable.Core#
-       * @type {CopyPaste}
-       */
       instance.copyPaste = new CopyPastePlugin(instance);
 
     } else if (!pluginEnabled && instance.copyPaste) {
@@ -14800,6 +12589,7 @@ if (typeof Handsontable !== 'undefined') {
 
   Handsontable.hooks.register('afterCopyLimit');
 })(Handsontable, CopyPaste, SheetClip);
+
 (function (Handsontable) {
 
   'use strict';
@@ -14982,7 +12772,6 @@ function CellInfoCollection() {
 /**
  * Plugin used to merge cells in Handsontable
  * @constructor
- * @private
  */
 function MergeCells(mergeCellsSetting) {
   this.mergedCellInfoCollection = new CellInfoCollection();
@@ -16245,17 +14034,10 @@ Handsontable.MergeCells = MergeCells;
  *
  * "Copy-down" copies the value of the selection to all empty cells
  * below when you double click the small square.
- *
- * @plugin
- * @class Handsontable.Autofill
  */
 (function (Handsontable) {
   'use strict';
 
-  /**
-   * @param instance
-   * @constructor
-   */
   function Autofill(instance) {
     this.instance = instance;
     this.addingStarted = false;
@@ -16340,9 +14122,6 @@ Handsontable.MergeCells = MergeCells;
 
   /**
    * Create fill handle and fill border objects
-   *
-   * @function init
-   * @memberof Handsontable.Autofill#
    */
   Autofill.prototype.init = function () {
     this.handle = {};
@@ -16350,218 +14129,202 @@ Handsontable.MergeCells = MergeCells;
 
   /**
    * Hide fill handle and fill border permanently
-   *
-   * @function disable
-   * @memberof Handsontable.Autofill#
    */
-  Autofill.prototype.disable = function () {
-    this.handle.disabled = true;
-  };
+    Autofill.prototype.disable = function () {
+      this.handle.disabled = true;
+    };
 
   /**
    * Selects cells down to the last row in the left column, then fills down to that cell
-   *
-   * @function selectAdjacent
-   * @memberof Handsontable.Autofill#
    */
-  Autofill.prototype.selectAdjacent = function () {
-    var select, data, r, maxR, c;
+    Autofill.prototype.selectAdjacent = function () {
+      var select, data, r, maxR, c;
 
-    if (this.instance.selection.isMultiple()) {
-      select = this.instance.view.wt.selections.area.getCorners();
-    }
-    else {
-      select = this.instance.view.wt.selections.current.getCorners();
-    }
+      if (this.instance.selection.isMultiple()) {
+        select = this.instance.view.wt.selections.area.getCorners();
+      }
+      else {
+        select = this.instance.view.wt.selections.current.getCorners();
+      }
 
-    data = this.instance.getData();
-    rows : for (r = select[2] + 1; r < this.instance.countRows(); r++) {
-      for (c = select[1]; c <= select[3]; c++) {
-        if (data[r][c]) {
-          break rows;
+      data = this.instance.getData();
+      rows : for (r = select[2] + 1; r < this.instance.countRows(); r++) {
+        for (c = select[1]; c <= select[3]; c++) {
+          if (data[r][c]) {
+            break rows;
+          }
+        }
+        if (!!data[r][select[1] - 1] || !!data[r][select[3] + 1]) {
+          maxR = r;
         }
       }
-      if (!!data[r][select[1] - 1] || !!data[r][select[3] + 1]) {
-        maxR = r;
+      if (maxR) {
+        this.instance.view.wt.selections.fill.clear();
+        this.instance.view.wt.selections.fill.add(new WalkontableCellCoords(select[0], select[1]));
+        this.instance.view.wt.selections.fill.add(new WalkontableCellCoords(maxR, select[3]));
+        this.apply();
       }
-    }
-    if (maxR) {
-      this.instance.view.wt.selections.fill.clear();
-      this.instance.view.wt.selections.fill.add(new WalkontableCellCoords(select[0], select[1]));
-      this.instance.view.wt.selections.fill.add(new WalkontableCellCoords(maxR, select[3]));
-      this.apply();
-    }
-  };
+    };
 
   /**
    * Apply fill values to the area in fill border, omitting the selection border
-   *
-   * @function apply
-   * @memberof Handsontable.Autofill#
    */
-  Autofill.prototype.apply = function () {
-    var drag, select, start, end, _data;
+    Autofill.prototype.apply = function () {
+      var drag, select, start, end, _data;
 
-    this.handle.isDragged = 0;
+      this.handle.isDragged = 0;
 
-    drag = this.instance.view.wt.selections.fill.getCorners();
-    if (!drag) {
-      return;
-    }
-
-    var getDeltas = function (start, end, data, direction) {
-      var rlength = data.length, // rows
-        clength = data ? data[0].length : 0; // cols
-
-      var deltas = [];
-
-      var diffRow = end.row - start.row,
-        diffCol = end.col - start.col;
-
-      var startValue, endValue, delta;
-
-      var arr = [];
-
-      if (['down', 'up'].indexOf(direction) !== -1) {
-        for (var col = 0; col <= diffCol; col++) {
-
-          startValue = parseInt(data[0][col], 10);
-          endValue = parseInt(data[rlength-1][col], 10);
-          delta = (direction === 'down' ? (endValue - startValue) : (startValue - endValue))  / (rlength - 1) || 0;
-
-          arr.push(delta);
-        }
-
-        deltas.push(arr);
+      drag = this.instance.view.wt.selections.fill.getCorners();
+      if (!drag) {
+        return;
       }
 
-      if (['right', 'left'].indexOf(direction) !== -1) {
-        for (var row = 0; row <= diffRow; row++) {
+      var getDeltas = function (start, end, data, direction) {
+        var rlength = data.length, // rows
+            clength = data ? data[0].length : 0; // cols
 
-          startValue = parseInt(data[row][0], 10);
-          endValue = parseInt(data[row][clength-1], 10);
-          delta = (direction === 'right' ? (endValue - startValue) : (startValue - endValue)) / (clength - 1) || 0;
+        var deltas = [];
 
-          arr = [];
-          arr.push(delta);
+        var diffRow = end.row - start.row,
+            diffCol = end.col - start.col;
+
+        var startValue, endValue, delta;
+
+        var arr = [];
+
+        if (['down', 'up'].indexOf(direction) !== -1) {
+          for (var col = 0; col <= diffCol; col++) {
+
+            startValue = parseInt(data[0][col], 10);
+            endValue = parseInt(data[rlength-1][col], 10);
+            delta = (direction === 'down' ? (endValue - startValue) : (startValue - endValue))  / (rlength - 1) || 0;
+
+            arr.push(delta);
+          }
 
           deltas.push(arr);
         }
+
+        if (['right', 'left'].indexOf(direction) !== -1) {
+          for (var row = 0; row <= diffRow; row++) {
+
+            startValue = parseInt(data[row][0], 10);
+            endValue = parseInt(data[row][clength-1], 10);
+            delta = (direction === 'right' ? (endValue - startValue) : (startValue - endValue)) / (clength - 1) || 0;
+
+            arr = [];
+            arr.push(delta);
+
+            deltas.push(arr);
+          }
+        }
+
+        return deltas;
+      };
+
+      this.instance.view.wt.selections.fill.clear();
+
+      if (this.instance.selection.isMultiple()) {
+        select = this.instance.view.wt.selections.area.getCorners();
+      }
+      else {
+        select = this.instance.view.wt.selections.current.getCorners();
       }
 
-      return deltas;
+      var direction;
+
+      if (drag[0] === select[0] && drag[1] < select[1]) {
+        direction = 'left';
+
+        start = new WalkontableCellCoords(
+          drag[0],
+          drag[1]
+        );
+        end = new WalkontableCellCoords(
+          drag[2],
+            select[1] - 1
+        );
+      }
+      else if (drag[0] === select[0] && drag[3] > select[3]) {
+        direction = 'right';
+
+        start = new WalkontableCellCoords(
+          drag[0],
+          select[3] + 1
+        );
+        end = new WalkontableCellCoords(
+          drag[2],
+          drag[3]
+        );
+      }
+      else if (drag[0] < select[0] && drag[1] === select[1]) {
+        direction = 'up';
+
+        start = new WalkontableCellCoords(
+          drag[0],
+          drag[1]
+        );
+        end = new WalkontableCellCoords(
+          select[0] - 1,
+          drag[3]
+        );
+      }
+      else if (drag[2] > select[2] && drag[1] === select[1]) {
+        direction = 'down';
+
+        start = new WalkontableCellCoords(
+          select[2] + 1,
+          drag[1]
+        );
+        end = new WalkontableCellCoords(
+          drag[2],
+          drag[3]
+        );
+      }
+
+      if (start && start.row > -1 && start.col > -1) {
+        var selRange = {from: this.instance.getSelectedRange().from, to: this.instance.getSelectedRange().to};
+
+        _data = this.instance.getData(selRange.from.row, selRange.from.col, selRange.to.row, selRange.to.col);
+
+        var deltas = getDeltas(start, end, _data, direction);
+
+        Handsontable.hooks.run(this.instance, 'beforeAutofill', start, end, _data);
+
+        this.instance.populateFromArray(start.row, start.col, _data, end.row, end.col, 'autofill', null, direction, deltas);
+
+        this.instance.selection.setRangeStart(new WalkontableCellCoords(drag[0], drag[1]));
+        this.instance.selection.setRangeEnd(new WalkontableCellCoords(drag[2], drag[3]));
+      } else {
+       //reset to avoid some range bug
+       this.instance.selection.refreshBorders();
+     }
     };
-
-    this.instance.view.wt.selections.fill.clear();
-
-    if (this.instance.selection.isMultiple()) {
-      select = this.instance.view.wt.selections.area.getCorners();
-    }
-    else {
-      select = this.instance.view.wt.selections.current.getCorners();
-    }
-
-    var direction;
-
-    if (drag[0] === select[0] && drag[1] < select[1]) {
-      direction = 'left';
-
-      start = new WalkontableCellCoords(
-        drag[0],
-        drag[1]
-      );
-      end = new WalkontableCellCoords(
-        drag[2],
-        select[1] - 1
-      );
-    }
-    else if (drag[0] === select[0] && drag[3] > select[3]) {
-      direction = 'right';
-
-      start = new WalkontableCellCoords(
-        drag[0],
-        select[3] + 1
-      );
-      end = new WalkontableCellCoords(
-        drag[2],
-        drag[3]
-      );
-    }
-    else if (drag[0] < select[0] && drag[1] === select[1]) {
-      direction = 'up';
-
-      start = new WalkontableCellCoords(
-        drag[0],
-        drag[1]
-      );
-      end = new WalkontableCellCoords(
-        select[0] - 1,
-        drag[3]
-      );
-    }
-    else if (drag[2] > select[2] && drag[1] === select[1]) {
-      direction = 'down';
-
-      start = new WalkontableCellCoords(
-        select[2] + 1,
-        drag[1]
-      );
-      end = new WalkontableCellCoords(
-        drag[2],
-        drag[3]
-      );
-    }
-
-    if (start && start.row > -1 && start.col > -1) {
-      var selRange = {from: this.instance.getSelectedRange().from, to: this.instance.getSelectedRange().to};
-
-      _data = this.instance.getData(selRange.from.row, selRange.from.col, selRange.to.row, selRange.to.col);
-
-      var deltas = getDeltas(start, end, _data, direction);
-
-      Handsontable.hooks.run(this.instance, 'beforeAutofill', start, end, _data);
-
-      this.instance.populateFromArray(start.row, start.col, _data, end.row, end.col, 'autofill', null, direction, deltas);
-
-      this.instance.selection.setRangeStart(new WalkontableCellCoords(drag[0], drag[1]));
-      this.instance.selection.setRangeEnd(new WalkontableCellCoords(drag[2], drag[3]));
-    } else {
-      //reset to avoid some range bug
-      this.instance.selection.refreshBorders();
-    }
-  };
 
   /**
    * Show fill border
-   *
-   * @function showBorder
-   * @memberof Handsontable.Autofill#
    * @param {WalkontableCellCoords} coords
    */
-  Autofill.prototype.showBorder = function (coords) {
-    var topLeft = this.instance.getSelectedRange().getTopLeftCorner();
-    var bottomRight = this.instance.getSelectedRange().getBottomRightCorner();
-    if (this.instance.getSettings().fillHandle !== 'horizontal' && (bottomRight.row < coords.row || topLeft.row > coords.row)) {
-      coords = new WalkontableCellCoords(coords.row, bottomRight.col);
-    }
-    else if (this.instance.getSettings().fillHandle !== 'vertical') {
-      coords = new WalkontableCellCoords(bottomRight.row, coords.col);
-    }
-    else {
-      return; //wrong direction
-    }
+    Autofill.prototype.showBorder = function (coords) {
+      var topLeft = this.instance.getSelectedRange().getTopLeftCorner();
+      var bottomRight = this.instance.getSelectedRange().getBottomRightCorner();
+      if (this.instance.getSettings().fillHandle !== 'horizontal' && (bottomRight.row < coords.row || topLeft.row > coords.row)) {
+        coords = new WalkontableCellCoords(coords.row, bottomRight.col);
+      }
+      else if (this.instance.getSettings().fillHandle !== 'vertical') {
+        coords = new WalkontableCellCoords(bottomRight.row, coords.col);
+      }
+      else {
+        return; //wrong direction
+      }
 
-    this.instance.view.wt.selections.fill.clear();
-    this.instance.view.wt.selections.fill.add(this.instance.getSelectedRange().from);
-    this.instance.view.wt.selections.fill.add(this.instance.getSelectedRange().to);
-    this.instance.view.wt.selections.fill.add(coords);
-    this.instance.view.render();
-  };
+      this.instance.view.wt.selections.fill.clear();
+      this.instance.view.wt.selections.fill.add(this.instance.getSelectedRange().from);
+      this.instance.view.wt.selections.fill.add(this.instance.getSelectedRange().to);
+      this.instance.view.wt.selections.fill.add(coords);
+      this.instance.view.render();
+    };
 
-  /**
-   * @function checkIfNewRowNeeded
-   * @memberof Handsontable.Autofill#
-   */
   Autofill.prototype.checkIfNewRowNeeded = function () {
     var fillCorners,
       selection,
@@ -16593,12 +14356,6 @@ Handsontable.MergeCells = MergeCells;
         autofill.disable();
       }
       else if (!autofill.handle && this.getSettings().fillHandle !== false) {
-        /**
-         * Instance of Autofill Plugin {@link Handsontable.Autofill}
-         * @alias autofill
-         * @memberof! Handsontable.Core#
-         * @type {Autofill}
-         */
         this.autofill = autofill;
         this.autofill.init();
       }
@@ -18877,16 +16634,10 @@ WalkontableOverlay.prototype.makeClone = function (direction) {
 
 WalkontableOverlay.prototype.getScrollableElement = function (TABLE) {
   var el = TABLE.parentNode;
-  while (el && el.style && document.body !== el) {
+  while (el && el.style) {
     if (el.style.overflow !== 'visible' && el.style.overflow !== '') {
       return el;
-    } else if(window.getComputedStyle) {
-      var computedStyle = window.getComputedStyle(el);
-      if(computedStyle.getPropertyValue('overflow') !== 'visible' && computedStyle.getPropertyValue('overflow') !== '') {
-        return el;
-      }
     }
-
     if (this instanceof WalkontableHorizontalScrollbarNative && el.style.overflowX !== 'visible' && el.style.overflowX !== '') {
       return el;
     }
@@ -19277,13 +17028,13 @@ WalkontableBorder.prototype.appear = function (corners) {
     this.cornerStyle.width = this.cornerDefaultStyle.width;
     this.cornerStyle.display = 'block';
 
-    if (toColumn === this.instance.getSetting('totalColumns') - 1) {
+    if (!instance.cloneOverlay && toColumn === instance.wtTable.getRenderedColumnsCount() - 1) {
       var scrollableElement = Handsontable.Dom.getScrollableElement(instance.wtTable.TABLE),
-        cornerOverlappingContainer = toTD.offsetLeft + Handsontable.Dom.outerWidth(toTD) >= Handsontable.Dom.innerWidth(scrollableElement);
-      
-      if (cornerOverlappingContainer) {
-        this.cornerStyle.left = Math.floor(left + width - 3 - parseInt(this.cornerDefaultStyle.width) / 2) + "px";
-        this.cornerStyle.borderRightWidth = 0;
+        needShrinkCorner = toTD.offsetLeft + Handsontable.Dom.outerWidth(toTD) >= Handsontable.Dom.innerWidth(scrollableElement);
+
+      if (needShrinkCorner) {
+        this.cornerStyle.borderRightWidth = '0px';
+        this.cornerStyle.width = Math.ceil(parseInt(this.cornerDefaultStyle.width, 10) / 2) + 'px';
       }
     }
   }
@@ -19336,7 +17087,6 @@ function WalkontableCellCoords(row, col) {
 
 /**
  * Returns boolean information if given set of coordinates is valid in context of a given Walkontable instance
- *
  * @param instance
  * @returns {boolean}
  */
@@ -19356,7 +17106,6 @@ WalkontableCellCoords.prototype.isValid = function (instance) {
 
 /**
  * Returns boolean information if this cell coords are the same as cell coords given as a parameter
- *
  * @param {WalkontableCellCoords} cellCoords
  * @returns {boolean}
  */
@@ -19405,7 +17154,6 @@ WalkontableCellRange.prototype.isSingle = function () {
 
 /**
  * Returns selected range height (in number of rows)
- *
  * @returns {number}
  */
 WalkontableCellRange.prototype.getHeight = function () {
@@ -19414,7 +17162,6 @@ WalkontableCellRange.prototype.getHeight = function () {
 
 /**
  * Returns selected range width (in number of columns)
- *
  * @returns {number}
  */
 WalkontableCellRange.prototype.getWidth = function () {
@@ -19423,7 +17170,6 @@ WalkontableCellRange.prototype.getWidth = function () {
 
 /**
  * Returns boolean information if given cell coords is within `from` and `to` cell coords of this range
- *
  * @param {WalkontableCellCoords} cellCoords
  * @returns {boolean}
  */
@@ -19456,7 +17202,6 @@ WalkontableCellRange.prototype.isEqual = function (testedRange) {
 /**
  * Returns true if tested range overlaps with the range.
  * Range A is considered to to be overlapping with range B if intersection of A and B or B and A is not empty.
- *
  * @param testedRange
  * @returns {boolean}
  */
@@ -19474,7 +17219,6 @@ WalkontableCellRange.prototype.isNorthWestOf = function (testedCoords) {
 
 /**
  * Adds a cell to a range (only if exceeds corners of the range). Returns information if range was expanded
- *
  * @param {WalkontableCellCoords} cellCoords
  * @returns {boolean}
  */
@@ -19696,7 +17440,6 @@ WalkontableCellRange.prototype.getAll = function () {
 
 /**
  * Runs a callback function against all cells in the range. You can break the iteration by returning false in the callback function
- *
  * @param callback {Function}
  */
 WalkontableCellRange.prototype.forAll = function (callback) {
@@ -19716,9 +17459,7 @@ window.WalkontableCellRange = WalkontableCellRange; //export
 
 /**
  * WalkontableColumnFilter
- *
  * @constructor
- * @private
  */
 function WalkontableColumnFilter(offset,total, countTH) {
   this.offset = offset;
@@ -19760,12 +17501,10 @@ WalkontableColumnFilter.prototype.sourceColumnToVisibleRowHeadedColumn = functio
 
 /**
  * WalkontableColumnStrategy
- * 
  * @param containerSizeFn
  * @param sizeAtIndex
  * @param strategy - all, last, none
  * @constructor
- * @private
  */
 function WalkontableColumnStrategy(instance, containerSizeFn, sizeAtIndex, strategy) {
   var size
@@ -19911,7 +17650,6 @@ function Walkontable(settings) {
 
 /**
  * Force rerender of Walkontable
- *
  * @param fastDraw {Boolean} When TRUE, try to refresh only the positions of borders without rerendering the data.
  *                           It will only work if WalkontableTable.draw() does not force rendering anyway
  * @returns {Walkontable}
@@ -19931,7 +17669,6 @@ Walkontable.prototype.draw = function (fastDraw) {
 /**
  * Returns the TD at coords. If topmost is set to true, returns TD from the topmost overlay layer,
  * if not set or set to false, returns TD from the master table.
- *
  * @param {WalkontableCellCoords} coords
  * @param {Boolean} topmost
  * @returns {Object}
@@ -19961,7 +17698,6 @@ Walkontable.prototype.update = function (settings, value) {
 
 /**
  * Scroll the viewport to a row at the given index in the data source
- *
  * @param row
  * @returns {Walkontable}
  */
@@ -19973,8 +17709,7 @@ Walkontable.prototype.scrollVertical = function (row) {
 
 /**
  * Scroll the viewport to a column at the given index in the data source
- *
- * @param column
+ * @param row
  * @returns {Walkontable}
  */
 Walkontable.prototype.scrollHorizontal = function (column) {
@@ -19985,7 +17720,6 @@ Walkontable.prototype.scrollHorizontal = function (column) {
 
 /**
  * Scrolls the viewport to a cell (rerenders if needed)
- *
  * @param {WalkontableCellCoords} coords
  * @returns {Walkontable}
  */
@@ -20023,10 +17757,8 @@ Walkontable.prototype.destroy = function () {
 /**
  * A overlay that renders ALL available rows & columns positioned on top of the original Walkontable instance and all other overlays.
  * Used for debugging purposes to see if the other overlays (that render only part of the rows & columns) are positioned correctly
- *
  * @param instance
  * @constructor
- * @private
  */
 function WalkontableDebugOverlay(instance) {
   this.instance = instance;
@@ -20332,7 +18064,6 @@ function walkontableRangesIntersect() {
 
 /**
  * Generates a random hex string. Used as namespace for Walkontable instance events.
- *
  * @return {String} - 16 character random string: "92b1bfc74ec4"
  */
 function walkontableRandomString() {
@@ -20344,7 +18075,6 @@ function walkontableRandomString() {
 
   return s4() + s4() + s4() + s4();
 }
-
 /**
  * http://notes.jetienne.com/2011/05/18/cancelRequestAnimFrame-for-paul-irish-requestAnimFrame.html
  */
@@ -20404,9 +18134,7 @@ if (!String.prototype.trim) {
 
 /**
  * WalkontableRowFilter
- *
  * @constructor
- * @private
  */
 function WalkontableRowFilter(offset, total, countTH) {
   this.offset = offset;
@@ -20448,7 +18176,6 @@ function WalkontableScroll(instance) {
 
 /**
  * Scrolls viewport to a cell by minimum number of cells
- *
  * @param {WalkontableCellCoords} coords
  */
 WalkontableScroll.prototype.scrollViewport = function (coords) {
@@ -20475,7 +18202,7 @@ WalkontableScroll.prototype.scrollViewport = function (coords) {
 
     if (coords.col > this.instance.wtTable.getLastVisibleColumn()) {
       this.instance.wtScrollbars.horizontal.scrollTo(coords.col, true);
-    } else if (coords.col >= this.instance.getSetting('fixedColumnsLeft') && coords.col < this.instance.wtTable.getFirstVisibleColumn()){
+    } else if (coords.col > this.instance.getSetting('fixedColumnsLeft') && coords.col < this.instance.wtTable.getFirstVisibleColumn()){
       this.instance.wtScrollbars.horizontal.scrollTo(coords.col);
     }
 
@@ -20625,7 +18352,6 @@ WalkontableHorizontalScrollbarNative.prototype.applyToDOM = function () {
 
 /**
  * Scrolls horizontally to a column at the left edge of the viewport
- *
  * @param sourceCol {Number}
  * @param beyondRendered {Boolean} if TRUE, scrolls according to the bottom edge (top edge is by default)
  */
@@ -20879,7 +18605,6 @@ function WalkontableSelection(settings, cellRange) {
 
 /**
  * Each Walkontable clone requires it's own border for every selection. This method creates and returns selection borders per instance
- *
  * @param {Walkontable} instance
  * @returns {WalkontableBorder}
  */
@@ -20893,8 +18618,7 @@ WalkontableSelection.prototype.getBorder = function (instance) {
 
 /**
  * Returns boolean information if selection is empty
- *
- * @returns {Boolean}
+ * @returns {boolean}
  */
 WalkontableSelection.prototype.isEmpty = function () {
   return this.cellRange === null;
@@ -20902,7 +18626,6 @@ WalkontableSelection.prototype.isEmpty = function () {
 
 /**
  * Adds a cell coords to the selection
- *
  * @param {WalkontableCellCoords} coords
  */
 WalkontableSelection.prototype.add = function (coords) {
@@ -20916,10 +18639,9 @@ WalkontableSelection.prototype.add = function (coords) {
 
 /**
  * If selection range from or to property equals oldCoords, replace it with newCoords. Return boolean information about success
- *
  * @param {WalkontableCellCoords} oldCoords
  * @param {WalkontableCellCoords} newCoords
- * @returns {Boolean}
+ * @return {boolean}
  */
 WalkontableSelection.prototype.replace = function (oldCoords, newCoords) {
   if (!this.isEmpty()) {
@@ -20944,7 +18666,6 @@ WalkontableSelection.prototype.clear = function () {
 
 /**
  * Returns the top left (TL) and bottom right (BR) selection coordinates
- *
  * @returns {Object}
  */
 WalkontableSelection.prototype.getCorners = function () {
@@ -21107,7 +18828,8 @@ function WalkontableSettings(instance, settings) {
     scrollbarHeight: 10,
 
     renderAllRows: false,
-    renderAllColumns: false, //Hook by Fred
+    // Hook by fred
+    renderAllColumns: false,
     groups: false
   };
 
@@ -21131,6 +18853,7 @@ function WalkontableSettings(instance, settings) {
 /**
  * generic methods
  */
+
 WalkontableSettings.prototype.update = function (settings, value) {
   if (value === void 0) { //settings is object
     for (var i in settings) {
@@ -21253,7 +18976,6 @@ WalkontableTable.prototype.isWorkingOnClone = function () {
 
 /**
  * Redraws the table
- *
  * @param fastDraw {Boolean} If TRUE, will try to avoid full redraw and only update the border positions. If FALSE or UNDEFINED, will perform a full redraw
  * @returns {WalkontableTable}
  */
@@ -21365,11 +19087,11 @@ WalkontableTable.prototype.refreshSelections = function (fastDraw) {
 
 /**
  * getCell
- *
  * @param {WalkontableCellCoords} coords
- * @returns {Object} HTMLElement on success or {Number} one of the exit codes on error:
+ * @return {Object} HTMLElement on success or {Number} one of the exit codes on error:
  *  -1 row before viewport
  *  -2 row after viewport
+ *
  */
 WalkontableTable.prototype.getCell = function (coords) {
   if (this.isRowBeforeRenderedRows(coords.row)) {
@@ -21388,10 +19110,10 @@ WalkontableTable.prototype.getCell = function (coords) {
 
 /**
  * getColumnHeader
- *
  * @param col
  * @param level Header level (0 = most distant to the table)
- * @returns {Object} HTMLElement on success or undefined on error
+ * @return {Object} HTMLElement on success or undefined on error
+ *
  */
 WalkontableTable.prototype.getColumnHeader = function(col, level) {
   if(!level) {
@@ -21406,10 +19128,10 @@ WalkontableTable.prototype.getColumnHeader = function(col, level) {
 
 /**
  * getRowHeader
- *
  * @param row
- * @returns {Object} HTMLElement on success or {Number} one of the exit codes on error:
+ * @return {Object} HTMLElement on success or {Number} one of the exit codes on error:
  *  null table doesn't have row headers
+ *
  */
 WalkontableTable.prototype.getRowHeader = function(row) {
   if(this.columnFilter.sourceColumnToVisibleRowHeadedColumn(0) === 0) {
@@ -21425,7 +19147,6 @@ WalkontableTable.prototype.getRowHeader = function(row) {
 
 /**
  * Returns cell coords object for a given TD
- *
  * @param TD
  * @returns {WalkontableCellCoords}
  */
@@ -21544,9 +19265,8 @@ WalkontableTable.prototype.allRowsInViewport = function () {
 
 /**
  * Checks if any of the row's cells content exceeds its initial height, and if so, returns the oversized height
- *
  * @param {Number} sourceRow
- * @returns {Number}
+ * @return {Number}
  */
 WalkontableTable.prototype.getRowHeight = function (sourceRow) {
   var height = this.instance.wtSettings.settings.rowHeight(sourceRow);
@@ -21842,8 +19562,8 @@ WalkontableTableRenderer.prototype.renderCells = function (sourceRowIndex, TR, d
       TD = this.utils.replaceThWithTd(TD, TR);
     }
 
-    // Hooks by fred for better performances
     if (!Handsontable.Dom.hasClass(TD, 'hide') && Handsontable.Dom.hasClass(TD, 'htInvalid')) {
+      //Hooks by fred
       TD.className = '';
     }
 
@@ -21897,7 +19617,7 @@ WalkontableTableRenderer.prototype.createRow = function () {
 };
 
 WalkontableTableRenderer.prototype.renderRowHeader = function(row, col, TH){
-  // Hook by fred for better performances
+  //Hooks by fred
   //TH.className = '';
   //TH.removeAttribute('style');
   this.rowHeaders[col](row, TH, col);
@@ -22256,7 +19976,6 @@ WalkontableViewport.prototype.getViewportWidth = function () {
  * Creates:
  *  - rowsRenderCalculator (before draw, to qualify rows for rendering)
  *  - rowsVisibleCalculator (after draw, to measure which rows are actually visible)
- *
  * @returns {WalkontableViewportRowsCalculator}
  */
 WalkontableViewport.prototype.createRowsCalculator = function (visible) {
@@ -22299,21 +20018,20 @@ WalkontableViewport.prototype.createRowsCalculator = function (visible) {
  * Creates:
  *  - columnsRenderCalculator (before draw, to qualify columns for rendering)
  *  - columnsVisibleCalculator (after draw, to measure which columns are actually visible)
- *
  * @returns {WalkontableViewportRowsCalculator}
  */
 WalkontableViewport.prototype.createColumnsCalculator = function (visible) {
   this.columnHeaderHeight = NaN;
 
-  //var width = this.getViewportWidth();
-  // Hook by Fred:
+  // Hook by Fred to render all columns
   var width;
-  if (this.instance.wtSettings.settings.renderAllRows) {
+  if (this.instance.wtSettings.settings.renderAllColumns) {
     width = Infinity;
   }
   else {
     width = this.getViewportWidth();
   }
+  // End hooks
 
   var pos = this.instance.wtScrollbars.horizontal.getScrollPosition() - this.instance.wtScrollbars.vertical.getTableParentOffset();
   if (pos < 0) {
@@ -22344,7 +20062,6 @@ WalkontableViewport.prototype.createColumnsCalculator = function (visible) {
 
 /**
  * Creates rowsRenderCalculator and columnsRenderCalculator (before draw, to determine what rows and cols should be rendered)
- *
  * @param fastDraw {Boolean} If TRUE, will try to avoid full redraw and only update the border positions. If FALSE or UNDEFINED, will perform a full redraw
  */
 WalkontableViewport.prototype.createRenderCalculators = function (fastDraw) {
@@ -22382,7 +20099,7 @@ WalkontableViewport.prototype.createVisibleCalculators = function () {
  * Returns TRUE if all proposed visible rows are already rendered (meaning: redraw is not needed)
  * Returns FALSE if at least one proposed visible row is not already rendered (meaning: redraw is needed)
  *
- * @returns {Boolean}
+ * @returns {boolean}
  */
 WalkontableViewport.prototype.areAllProposedVisibleRowsAlreadyRendered = function (proposedRowsVisibleCalculator) {
   if (this.rowsVisibleCalculator) {
@@ -22410,7 +20127,7 @@ WalkontableViewport.prototype.areAllProposedVisibleRowsAlreadyRendered = functio
  * Returns TRUE if all proposed visible columns are already rendered (meaning: redraw is not needed)
  * Returns FALSE if at least one proposed visible column is not already rendered (meaning: redraw is needed)
  *
- * @returns {Boolean}
+ * @returns {boolean}
  */
 WalkontableViewport.prototype.areAllProposedVisibleColumnsAlreadyRendered = function (proposedColumnsVisibleCalculator) {
   if (this.columnsVisibleCalculator) {
@@ -22615,7 +20332,6 @@ function WalkontableViewportColumnsCalculator (width, scrollOffset, totalColumns
  * @param overrideFn - function that changes calculated this.startRow, this.endRow (used by mergeCells.js plugin)
  * @param onlyFullyVisible {bool} - if TRUE, only startRow and endRow will be indexes of rows that are FULLY in viewport
  * @constructor
- * @private
  */
 function WalkontableViewportRowsCalculator(height, scrollOffset, totalRows, rowHeightFn, overrideFn, onlyFullyVisible) {
   this.scrollOffset = scrollOffset;
