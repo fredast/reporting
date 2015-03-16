@@ -221,7 +221,7 @@ Report.prototype.initialize = function(){
 		}
 		else if(typeof backgroundColor == "string"){
 			col.renderer = function(instance, TD, row, col, prop, value, cellProperties){
-				Handsontable.renderers.getRenderer(colType ? colType == "dropdown" ? "autocomplete" : colType : "text")(instance, TD, row, col, prop, value, cellProperties);
+				Handsontable.renderers.getRenderer(colType ? colType == "dropdown" || colType == "date" ? "autocomplete" : colType : "text")(instance, TD, row, col, prop, value, cellProperties);
 				TD.style.backgroundColor = backgroundColor; //col.backgroundColor;
 			}
 		}
@@ -286,21 +286,35 @@ Report.prototype.initialize = function(){
 					if(entry[2] != entry[3] && column_code != 'import'){
 						entry_data.modified = true;
 					}
+					// Nominal EUR
+					if(column_code == "nominal" || column_code == "FX"){
+						entry_data.nominalEur = (parseFloat(entry_data.nominal) || 0) * (parseFloat(entry_data.FX) || 0);
+						modified = true;
+						entry_data.modified = true;
+					}
 					// Sales Credit Upfront
-					if(column_code == "marginPct" || column_code == "nominalEur"){
+					if(column_code == "marginPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
 						entry_data.marginEur = (parseFloat(entry_data.marginPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
 						modified = true;
 						entry_data.modified = true;
 					}
 					// Sales Credit Running
-					if(column_code == "marginRunningPct" || column_code == "nominalEur"){
+					if(column_code == "marginRunningPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
 						entry_data.marginRunningEur = (parseFloat(entry_data.marginRunningPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
 						modified = true;
 						entry_data.modified = true;
 					}
-					// Sales Credit Running
-					if(column_code == "marginRunningPct" || column_code == "marginPct" || column_code == "marginEur" || column_code == "marginRunningEur" || column_code == "TEC" || column_code == "FTEC" || column_code == "nominalEur" || column_code == "CVAfee"){
-						entry_data.netMarginEur = (parseFloat(entry_data.marginEur) || 0) + (parseFloat(entry_data.marginRunningEur) || 0) + (parseFloat(entry_data.TEC) || 0) * (parseFloat(entry_data.FTEC) || 0) * (parseFloat(entry_data.nominalEur) || 0) - (parseFloat(entry_data.CVAfee) || 0) * (parseFloat(entry_data.nominalEur) || 0);
+					// Sales Credit
+					if(column_code == "marginRunningPct" || column_code == "marginPct" || column_code == "marginEur" 
+						|| column_code == "marginRunningEur" || column_code == "TEC" || column_code == "FTEC" 
+						|| column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
+						entry_data.netMarginEur = (parseFloat(entry_data.nominalEur) || 0) * ((parseFloat(entry_data.marginPct) || 0) + (parseFloat(entry_data.TEC) || 0) * (parseFloat(entry_data.FTEC) || 0)) + (parseFloat(entry_data.marginRunningEur) || 0);
+						entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
+						modified = true;
+						entry_data.modified = true;
+					}
+					if(column_code == "netMarginEur"){
+						entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
 						modified = true;
 						entry_data.modified = true;
 					}
