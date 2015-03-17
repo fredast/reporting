@@ -49,7 +49,7 @@ Report.prototype.load = function(){
 	$.ajax({
 		type: "POST",
 		url: thisR.urlData,
-		data: {type: 'report', request: 'load', dataType: thisR.typeName, all: thisR.all, team: thisR.team, cameleon: thisR.cameleon},
+		data: {type: 'report', request: 'load', dataType: thisR.typeName, all: Boolean(thisR.all), team: Boolean(thisR.team), cameleon: thisR.cameleon},
 		dataType: 'json',
 		success: function(result){
 			thisR.data = result.data;
@@ -69,10 +69,15 @@ Report.prototype.importSpark = function(row){
 	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
 	var entry = thisR.currentData[data_row];
 	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true 
-		&& typeof entry.ref == "string" && entry.ref != ""){
-
+		&& typeof entry.ref == "string" && entry.ref != "" && typeof entry.source == "string" && entry.source != ""){
+		var mapping = {
+			"spark" : "sparksDeal",
+			"eliot" : "eliotDeal",
+			"x-one" : "xoneDeal"
+		}
+		var source = mapping[entry.source.toLowerCase()];
 		$.ajax({
-			url: "http://markeng.fr.world.socgen/mapping/sparksDeal/" + entry.ref,
+			url: "http://markeng.fr.world.socgen/mapping/" + mapping + "/" + entry.ref,
 			dataType: 'json',
 			success: function(result){
 				console.log(result);
@@ -112,34 +117,6 @@ Report.prototype.initialize = function(){
 	document.title = thisR.type.name;
 	$('.data-report-name').html(thisR.type.name.toLowerCase());
 
-	// Show all
-	if(typeof thisR.userOptions.access == "object" && (thisR.userOptions.access.indexOf("ADMIN") >= 0 || thisR.userOptions.access.indexOf("SUPERUSER") >= 0)){
-		if(thisR.all){
-			$("#cmd-show-all").click(function(){
-				post(".", {});
-			});
-			$('#cmd-show-all').attr('class', 'btn btn-warning');
-		}
-		else{
-			$("#cmd-show-all").click(function(){
-				post(".", {showAll: true});
-			});
-		}		
-		$("#cmd-show-all").show();
-	}
-	// Show team
-	if(thisR.team){
-		$("#cmd-show-team").click(function(){
-			post(".", {});
-		});
-		$("#cmd-show-team").attr('class', 'btn btn-warning');
-	}
-	else{
-		$("#cmd-show-team").click(function(){
-			post(".", {showTeam: true});
-		});
-	}
-
 	// Cameleon mode
 	if(typeof thisR.userOptions.teamWrite == "object" && thisR.userOptions.teamWrite.length > 0){
 		thisR.userOptions.teamWrite.sort();
@@ -171,7 +148,8 @@ Report.prototype.initialize = function(){
 	thisR.type.columnsHeader = thisR.type.columns.map(function(col){return col.header});
 
 	// Date formats
-	thisR.DATE_FORMATS = ["DD/MM/YY", "DD/MM/YYYY", "YYYY-MM-DD", "D-M"];
+	thisR.DATE_FORMATS = ["YYYY-MM-DD", "DD/MM/YY", "DD/MM/YYYY", "D-M"];
+	thisR.TARGET_FORMAT = "YYYY-MM-DD";
 
 	// Columns
 	thisR.columnsMap = {};
@@ -242,6 +220,52 @@ Report.prototype.initialize = function(){
 		// Columns map
 		thisR.columnsMap[col.data] = col;
 	});
+
+	// Show all
+	if(typeof thisR.userOptions.access == "object" && (thisR.userOptions.access.indexOf("ADMIN") >= 0 || thisR.userOptions.access.indexOf("SUPERUSER") >= 0)){
+		if(thisR.all){
+			$($('#cmd-show-all button')[0]).attr('class', 'btn btn-warning btn-sm');
+			$($('#cmd-show-all button')[1]).attr('class', 'btn btn-warning dropdown-toggle btn-sm');
+			$($('#cmd-show-all button')[0]).click(function(){post(".", {});});
+		}
+		else{
+			$($('#cmd-show-all button')[0]).click(function(){post(".", {showAll: true});});
+		}
+		thisR.columnsMap.business.source.forEach(function(biz) {
+			var link = $('<a href="#"></a>').html(biz).click(function(){post(".", {showAll: biz});});
+			if(thisR.all == biz){
+				link.attr('class', 'btn-warning');
+			}
+			$("#cmd-show-all ul").append($('<li></li>').append(link));
+		});
+		if(typeof thisR.all == "string"){
+			$('#cmd-search-box').val(thisR.all);
+		}
+		$('#cmd-show-all').show();
+		if(typeof thisR.all == "string"){
+			$('#cmd-search-box').val(thisR.all);
+		}
+	}
+
+	// Show team
+	if(thisR.team){
+		$($('#cmd-show-team button')[0]).attr('class', 'btn btn-warning btn-sm');
+		$($('#cmd-show-team button')[1]).attr('class', 'btn btn-warning dropdown-toggle btn-sm');
+		$($('#cmd-show-team button')[0]).click(function(){post(".", {});});
+	}
+	else{
+		$($('#cmd-show-team button')[0]).click(function(){post(".", {showTeam: true});});
+	}
+	thisR.columnsMap.business.source.forEach(function(biz) {
+		var link = $('<a href="#"></a>').html(biz).click(function(){post(".", {showTeam: biz});});
+		if(thisR.team == biz){
+			link.attr('class', 'btn-warning');
+		}
+		$("#cmd-show-team ul").append($('<li></li>').append(link));
+	});
+	if(typeof thisR.team == "string"){
+		$('#cmd-search-box').val(thisR.team);
+	}
 	
 	// Copy header to clipboard
 	var clipboardClient = new ZeroClipboard($("#cmd-copy-header"));
@@ -256,7 +280,8 @@ Report.prototype.initialize = function(){
 	});
 	
 	// Handsontable
-	thisR.currentData = thisR.data.filter(function(entry){return !entry.deleted; });
+	//thisR.currentData = thisR.data.filter(function(entry){return !entry.deleted; });
+	thisR.search(true);
 	$('#handsontable-container').handsontable({
 		data: thisR.currentData,
 		minSpareRows: 1,
@@ -289,49 +314,51 @@ Report.prototype.initialize = function(){
 			}
 		},
 		afterChange: function(change, source){
-			console.log(change);
 			var modified = false;
-			if(Object.prototype.toString.call(change) == "[object Array]"){
-				change.forEach(function(entry){
-					var row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', entry[0])
-					var column_code = thisR.columnsMap[entry[1]].data;
-					var entry_data = thisR.currentData[row];
-					if(entry[2] != entry[3] && column_code != 'import'){
-						entry_data.modified = true;
-					}
-					// Nominal EUR
-					if(column_code == "nominal" || column_code == "FX"){
-						entry_data.nominalEur = (parseFloat(entry_data.nominal) || 0) * (parseFloat(entry_data.FX) || 0);
-						modified = true;
-						entry_data.modified = true;
-					}
-					// Sales Credit Upfront
-					if(column_code == "marginPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
-						entry_data.marginEur = (parseFloat(entry_data.marginPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
-						modified = true;
-						entry_data.modified = true;
-					}
-					// Sales Credit Running
-					if(column_code == "marginRunningPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
-						entry_data.marginRunningEur = (parseFloat(entry_data.marginRunningPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
-						modified = true;
-						entry_data.modified = true;
-					}
-					// Sales Credit
-					if(column_code == "marginRunningPct" || column_code == "marginPct" || column_code == "marginEur" 
-						|| column_code == "marginRunningEur" || column_code == "TEC" || column_code == "FTEC" 
-						|| column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
-						entry_data.netMarginEur = (parseFloat(entry_data.nominalEur) || 0) * ((parseFloat(entry_data.marginPct) || 0) + (parseFloat(entry_data.TEC) || 0) * (parseFloat(entry_data.FTEC) || 0)) + (parseFloat(entry_data.marginRunningEur) || 0);
-						entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
-						modified = true;
-						entry_data.modified = true;
-					}
-					if(column_code == "netMarginEur"){
-						entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
-						modified = true;
-						entry_data.modified = true;
-					}
-				});
+			if(source == "edit" || source == "paste"){
+				if(Object.prototype.toString.call(change) == "[object Array]"){
+					change.forEach(function(entry){
+						var row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', entry[0])
+						//var column_code = thisR.columnsMap[entry[1]].data;
+						var column_code = entry[1];
+						var entry_data = thisR.currentData[row];
+						if(entry[2] != entry[3] && column_code != 'import'){
+							entry_data.modified = true;
+						}
+						// Nominal EUR
+						if(column_code == "nominal" || column_code == "FX"){
+							entry_data.nominalEur = (parseFloat(entry_data.nominal) || 0) * (parseFloat(entry_data.FX) || 0);
+							modified = true;
+							entry_data.modified = true;
+						}
+						// Sales Credit Upfront
+						if(column_code == "marginPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
+							entry_data.marginEur = (parseFloat(entry_data.marginPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
+							modified = true;
+							entry_data.modified = true;
+						}
+						// Sales Credit Running
+						if(column_code == "marginRunningPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
+							entry_data.marginRunningEur = (parseFloat(entry_data.marginRunningPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
+							modified = true;
+							entry_data.modified = true;
+						}
+						// Sales Credit
+						if(column_code == "marginRunningPct" || column_code == "marginPct" || column_code == "marginEur" 
+							|| column_code == "marginRunningEur" || column_code == "TEC" || column_code == "FTEC" 
+							|| column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
+							entry_data.netMarginEur = (parseFloat(entry_data.nominalEur) || 0) * ((parseFloat(entry_data.marginPct) || 0) + (parseFloat(entry_data.TEC) || 0) * (parseFloat(entry_data.FTEC) || 0)) + (parseFloat(entry_data.marginRunningEur) || 0);
+							entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
+							modified = true;
+							entry_data.modified = true;
+						}
+						if(column_code == "netMarginEur"){
+							entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
+							modified = true;
+							entry_data.modified = true;
+						}
+					});
+				}
 			}
 			if(source == "paste" || modified){
 				thisR.handsontableHandler.validateCells(function(){});
@@ -346,7 +373,7 @@ Report.prototype.initialize = function(){
 						// Format date
 						console.log(entry);
 						if(thisR.columnsMap[entry[1]].type == "date"){
-							entry[3] = moment(entry[3], thisR.DATE_FORMATS).format("DD/MM/YYYY");
+							entry[3] = moment(entry[3], thisR.DATE_FORMATS).format(thisR.TARGET_FORMAT);
 						}
 						// Format numbers
 						if(thisR.columnsMap[entry[1]].dataType == "numeric"){
@@ -417,7 +444,7 @@ Report.prototype.initialize = function(){
 	$('#cmd-search-box').keydown(function(event){
 		if(event.keyCode == 13) {
 			event.preventDefault();
-			thisR.search();
+			thisR.search(false);
 			return false;
 		}
 		//thisR.search();
@@ -432,6 +459,9 @@ Report.prototype.save = function(){
 		return true; 
 	}
 	$('#cmd-confirm-save').button('loading');
+	// Remove import
+	modifiedData.forEach(function(entry){ delete entry['import']; });
+
 	console.log(modifiedData);
 	$.ajax({
 		type: "POST",
@@ -491,7 +521,7 @@ Report.prototype.isEntryEmpty = function(entry){
 	---------------
 */
 
-Report.prototype.search = function(){
+Report.prototype.search = function(init){
 	var thisR = this;
 	var keyword = $('#cmd-search-box').val();
 	// Clean data
@@ -512,7 +542,9 @@ Report.prototype.search = function(){
 			});
 		});
 	}
-	thisR.handsontableHandler.loadData(thisR.currentData);
+	if(!init){
+		thisR.handsontableHandler.loadData(thisR.currentData);
+	}
 	//setTimeout(function() { thisR.handsontableHandler.render(); }, 100);
 };
 

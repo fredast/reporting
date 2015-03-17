@@ -9,6 +9,10 @@
 	padding-top: 5px;
 }
 
+/*#cmd-navbar-buttons button, #cmd-navbar-buttons select, #cmd-navbar-buttons span, #cmd-navbar-buttons input, #cmd-navbar-buttons div{
+	font-size: 11px;
+}*/
+
 #cmd-navbar .modal {
 	margin-top: 50px;
 }

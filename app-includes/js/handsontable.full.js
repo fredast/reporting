@@ -20513,7 +20513,7 @@ WalkontableCornerScrollbarNative.prototype.resetFixedPosition = function () {
     }
 
     // by fred: Hooks for fixed header with navbar
-    var headerOffsetForNavbar = 98.6;
+    var headerOffsetForNavbar = 94;
     if (top < headerOffsetForNavbar && (bottom - elem.offsetHeight) > 0) {
       finalTop = -top + headerOffsetForNavbar + "px";
     } else {
@@ -20679,7 +20679,7 @@ WalkontableVerticalScrollbarNative.prototype.resetFixedPosition = function () {
     finalLeft = this.instance.wtTable.hider.style.left;
 
     // by fred: Hooks for fixed header with navbar
-    var headerOffsetForNavbar = 98.6;
+    var headerOffsetForNavbar = 94;
     if (top < headerOffsetForNavbar && (bottom - elem.offsetHeight) > 0) {
       finalTop = -top + headerOffsetForNavbar + "px";
     } else {
@@ -21843,7 +21843,7 @@ WalkontableTableRenderer.prototype.renderCells = function (sourceRowIndex, TR, d
     }
 
     // Hooks by fred for better performances
-    if (!Handsontable.Dom.hasClass(TD, 'hide') && Handsontable.Dom.hasClass(TD, 'htInvalid')) {
+    if (!Handsontable.Dom.hasClass(TD, 'hide')/* && Handsontable.Dom.hasClass(TD, 'htInvalid')*/) {
       TD.className = '';
     }
 
@@ -22081,7 +22081,7 @@ function WalkontableViewport(instance) {
 
 WalkontableViewport.prototype.getWorkspaceHeight = function () {
   // Hooks by fred
-  return 1000;
+  return 1400;
   var scrollHandler = this.instance.wtScrollbars.vertical.scrollHandler;
   if (scrollHandler === window) {
     return document.documentElement.clientHeight;
@@ -22096,7 +22096,7 @@ WalkontableViewport.prototype.getWorkspaceHeight = function () {
 
 WalkontableViewport.prototype.getWorkspaceWidth = function () {
   // Hooks by fred
-  return 1900;
+  return 1500;
   var width,
     totalColumns = this.instance.getSetting("totalColumns"),
     scrollHandler = this.instance.wtScrollbars.horizontal.scrollHandler,
