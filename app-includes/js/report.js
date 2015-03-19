@@ -77,7 +77,7 @@ Report.prototype.importSpark = function(row){
 		}
 		var source = mapping[entry.source.toLowerCase()];
 		$.ajax({
-			url: "http://markeng.fr.world.socgen/mapping/" + mapping + "/" + entry.ref,
+			url: "http://markeng.fr.world.socgen/mapping/" + source + "/" + entry.ref,
 			dataType: 'json',
 			success: function(result){
 				console.log(result);
