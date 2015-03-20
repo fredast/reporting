@@ -143,6 +143,7 @@ widgetry.reportChart.editWidget = function(widget){
 	widget.yaxisFormat = $('#dash-wg-in-yaxis-format').val();
 	widget.aggregation = $('#dash-wg-in-aggregation').val();
 	widget.series = $('#dash-wg-in-series').tagsinput('items').slice();
+	widget.filter = $('#dash-wg-in-filter').val();
 };
 
 widgetry.reportChart.showWidget = function(widget, element){
@@ -171,35 +172,19 @@ widgetry.reportChart.showWidget = function(widget, element){
 
 widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximized){
 	var reportType = widgetry.thisD.reportTypeList.filter(function(obj){return obj.code == widget.reportType;})[0];
-
-	var highChartsContainer = $('<div class="highcharts"></div>');
-	element.append(highChartsContainer);
-
-	// Fetch a column description from its name.
-	var columnByName = function(name) {
-		var column = {},
-				currentColumn;
-		for(var i in reportType.columns) {
-			currentColumn = reportType.columns[i];
-			if(currentColumn.data == name) {
-				column = currentColumn;
-				break;
-			}
-		}
-		return column;
-	};
+console.log();
+	var highChartsContainer = $('<div class="highcharts"></div>'),
+			chartWrapper = $('<div class="wrapper"></div>');
+	element.append(chartWrapper.append(highChartsContainer));
 
 	// Columns descriptions for axes
-	var xColumn = columnByName(widget.xaxis);
-	var yColumn = columnByName(widget.yaxis);
+	var xColumn = reportType.columns.column(widget.xaxis);
+	var yColumn = reportType.columns.column(widget.yaxis);
 
 	// For a data point, set the X
 	var setX = function(obj, key) {
-		if(xColumn.type == "numeric") {
-			obj.x = parseFloat(key);
-		}
-		else if (xColumn.type == "date") {
-			obj.x = moment(key, "DD/MM/YYYY").unix() * 1000;
+		if(xColumn.type == "numeric" || xColumn.type == "date") {
+			obj.x = xColumn.typeValue(key).valueOf();
 		}
 		else {
 			obj.name = key;
@@ -228,23 +213,10 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 
 	// Return a formatter function for a column
 	var formatter = function(column, customFormat) {
-		if(column.type == "numeric") {
-			return function() {
-				return numeraljs(this.value || this.y).format(customFormat || column.format);
-			};
-		}
-		else if(column.type == "date") {
-			return function() {
-				var dateFormat = column.dateFormat.toUpperCase() || "DD/MM/YY";
-				// DATE FORMATS ARE ALL WRONG, SETTING IT TO UPPERCASE
-				return moment(this.value || this.y).format(customFormat || dateFormat);
-			}
-		}
-		else {
-			return function() {
-				return this.value || this.y;
-			}
-		}
+		return function() {
+			var value = (this.value !== undefined) ? this.value : this.y;
+			return column.formatValue(value, customFormat);
+		};
 	};
 
 	// Sort functions for a type
@@ -269,7 +241,10 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 		},
 		exporting: {
 			// We're using custom buttons
-			enabled: false
+			enabled: false,
+			csv: {
+				dateFormat: '%Y-%m-%d'
+			}
 		},
 		title: {
 			animation: false,
@@ -284,6 +259,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 		xAxis: {
 			type: axisTypeMapping[xColumn.type] || "category",
 			labels: {
+				rotation: maximized ? -45 : 0,
 				formatter: formatter(xColumn, widget.xaxisFormat),
 				style: {
 					fontSize: (maximized ? '14' : '10') + 'px'
@@ -331,24 +307,42 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 						fontWeight: maximized ? 'bold' : 'normal'
 					}
 				}
+			},
+			bar: {
+				dataLabels: {
+					enabled: maximized ? true : false,
+					formatter: formatter(yColumn, widget.yaxisFormat),
+          align: 'right',
+					x: -5
+				}
+			},
+			column: {
+				dataLabels: {
+					enabled: maximized ? true : false,
+					formatter: formatter(yColumn, widget.yaxisFormat),
+					y: 30
+				}
 			}
 		}
 	};
 
 	// Adding custom export buttons when maximized
+	// and side-info as well.
+	var sideInfo;
 	if(maximized) {
+		// Export buttons
 		var exportButtons = $('<div class="btn-group pull-right"></div>');
 
 		var safeFilename = widget.title.replace(/ /g, "_").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 
-		var formats = [ "PNG", "JPEG", "SVG", "PDF" ];
+		var formats = [ "PNG", "JPEG", "SVG", "PDF", "CSV", "XLS" ];
 		var exportButton;
 		formats.forEach(function(format) {
 			exportButton = $('<button class="btn btn-default"></button>').text(format);
 			exportButton.click(function() {
 				$(highChartsContainer).highcharts().exportChart({
 					scale: 1,
-					type: Highcharts.export.MIME_TYPES[format],
+					type: Highcharts.exporting.MIME_TYPES[format],
 					filename: "export_" + safeFilename
 				});
 			});
@@ -356,6 +350,122 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 		});
 
 		exportButtons.insertBefore(highChartsContainer);
+
+		// Sideinfo
+		sideInfo = {
+				dom: $('<div class="sideinfo col-xs-5 hidden">\
+					<h4>\
+						<div class="pull-right">\
+							<a href="#" class="action-close"><span class="glyphicon glyphicon-remove action-close"></span></a>\
+						</div>\
+						Data\
+					</h4>\
+					<div class="content"></div>\
+				</div>'),
+				isShown: function() {
+					return !this.dom.hasClass("hidden");
+				},
+				show: function() {
+					this.dom.removeClass("hidden");
+					chartWrapper.addClass("col-xs-7");
+					$(".show-data", chartWrapper).attr("disabled", "disabled");
+					highChartsContainer.highcharts().reflow();
+
+					if(!this.init) {
+
+						var table = $('<table class="table"></table>'),
+								thead = $('<thead></thread>').appendTo(table)
+								tbody = $('<tbody></tbody>').appendTo(table),
+								rawData = highChartsContainer.highcharts().getDataRows(),
+								rawHeaders = rawData.shift();
+
+						var xFormatter = formatter(xColumn, widget.xaxisFormat),
+								yFormatter = formatter(yColumn, widget.yaxisFormat),
+								xType = xColumn.type || "string",
+								yType = yColumn.type || "string";
+
+						var row = $('<tr></tr>');
+						rawHeaders.forEach(function(header, i) {
+							row.append(
+								$('<th></th>')
+									.addClass('type-' + (i ? yType : xType))
+									.text(header == 'no-serie' ? 'Value' : header)
+							);
+						});
+						thead.append(row);
+
+						rawData.forEach(function(data, i) {
+							var row = $('<tr></tr>'),
+									val,
+									formattedVal;
+
+							for (j = 0; j < data.length; j++) {
+								val = data[j];
+								formattedVal = (j ? yFormatter : xFormatter).bind({ value : val })();
+
+								row.append(
+									$('<td></td>')
+										.attr('data-order', val)
+										.addClass('type-' + (j ? yType : xType))
+										.text(formattedVal)
+								);
+							}
+
+							tbody.append(row);
+						});
+
+						$(".content", sideInfo.dom).append(table);
+
+						var dataTable = table.DataTable({
+								"paging": false,
+								"dom": 't',
+							});
+						dataTable
+							.columns
+								.adjust()
+							.draw();
+
+						this.init = true;
+					}
+				},
+				hide: function() {
+					this.dom.addClass("hidden");
+					chartWrapper.removeClass("col-xs-7");
+					$(".show-data", chartWrapper).removeAttr("disabled");
+					highChartsContainer.highcharts().reflow();
+				}
+			};
+		element.append(sideInfo.dom);
+
+
+		$(".action-close", sideInfo.dom).click(function(e) {
+			sideInfo.hide();
+			e.preventDefault();
+		});
+
+		var showDataLink = $('<button class="btn btn-default pull-right show-data">Show Data</button>');
+		showDataLink
+			.insertBefore(exportButtons)
+			.click(function(e) {
+				sideInfo.show();
+				e.preventDefault();
+			});
+
+
+
+		widget.keydownHandler = function(e){
+				switch (e.which) {
+					case 27:
+						if(sideInfo.isShown()) {
+							sideInfo.hide();
+						}
+						else {
+							$('#maximized-widget').modal('hide');
+						}
+						break;
+				}
+		};
+		$('html').bind('keydown', widget.keydownHandler);
 	}
 
 	// Request data
@@ -439,4 +549,8 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 
 			highChartsContainer.highcharts(highchartsData);
 		});
+};
+
+widgetry.reportChart.destroyWidget = function(widget, dashdisp, element, maximized) {
+	widget.keydownHandler && $('html').unbind('keydown', widget.keydownHandler);
 };

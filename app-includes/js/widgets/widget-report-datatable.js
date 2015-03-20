@@ -18,7 +18,8 @@ widgetry.reportDatatable.displaySettings = function(widget){
 		var reportType = widgetry.thisDA.reportTypeList.filter(function(obj){return obj.code == $('#dash-wg-in-reportType').val();})[0];
 
 		// __Columns
-		container.append('<h5>Columns</h5><select multiple id="dash-wg-in-columns"></select>');
+		container.append('<h5 id="dash-title-columns">Columns</h5>\
+			<select multiple id="dash-wg-in-columns"></select>');
 		$('#dash-wg-in-columns').tagsinput({
 			trimValue: true,
 			confirmKeys: [13, 188, 190, 32, 186],
@@ -29,6 +30,14 @@ widgetry.reportDatatable.displaySettings = function(widget){
 			},
 			freeInput: false
 		});
+
+		$('<button class="col-xs-2 pull-right">Add All</button>')
+			.prependTo($('#dash-title-columns'))
+			.click(function() {
+				reportType.columns.map(function(obj){ $('#dash-wg-in-columns').tagsinput('add', obj.data);});
+
+			});
+
 		$('#dash-wg-in-columns').off().on('itemAdded itemRemoved', function(){
 			var placeholder = $('#dash-wg-in-columns').tagsinput('items').length > 0 ? '' : 'Tags...';
 			$('#dash-wg-in-columns').next().find('input').attr({'placeholder':placeholder});
@@ -36,7 +45,8 @@ widgetry.reportDatatable.displaySettings = function(widget){
 
 
 		// __Columns in maximized modal
-		container.append('<h5>Columns when maximized</h5><select multiple id="dash-wg-in-columns-maximized"></select>');
+		container.append('<h5 id="dash-title-columns-maximized">Columns when maximized</h5>\
+			<select multiple id="dash-wg-in-columns-maximized"></select>');
 		$('#dash-wg-in-columns-maximized').tagsinput({
 			trimValue: true,
 			confirmKeys: [13, 188, 190, 32, 186],
@@ -47,10 +57,18 @@ widgetry.reportDatatable.displaySettings = function(widget){
 			},
 			freeInput: false
 		});
+		$('<button class="col-xs-2 pull-right">Add All</button>')
+			.prependTo($('#dash-title-columns-maximized'))
+			.click(function() {
+				reportType.columns.map(function(obj){ $('#dash-wg-in-columns-maximized').tagsinput('add', obj.data);});
+
+			});
+
 		$('#dash-wg-in-columns-maximized').off().on('itemAdded itemRemoved', function(){
 			var placeholder = $('#dash-wg-in-columns-maximized').tagsinput('items').length > 0 ? '' : 'Tags...';
 			$('#dash-wg-in-columns-maximized').next().find('input').attr({'placeholder':placeholder});
 		});
+
 
 		// __Columns sorting
 		container.append('<h5>Column sorting index</h5><input type="number" class="form-control" id="dash-wg-in-columnSortingIndex" value="1"><p>Index of the column to sort along. Start from 0.</p>');
@@ -121,32 +139,26 @@ widgetry.reportDatatable.displayWidget = function(widget, dashdisp, element, max
 			"string": "string"
 		};
 
-		var rendererMapping = {
-			"numeric": function(value, type) {
-				if(type == "sort") {
-					return value;
-				}
-				else if(value != '') {
-					return numeraljs(value).format(reportType.columns[columnIndex].format);
-				}
-			},
-			"date": function(value, type) {
-				var momentValue = moment(value, "DD/MM/YYYY");
-				if(type == "sort") {
-					return momentValue.unix();
-				}
-				else {
-					return momentValue.format(reportType.columns[columnIndex].dateFormat.toUpperCase());
-				}
+		var renderer = function(value, type) {
+			var column = reportType.columns[columnIndex],
+					typedValue = column.typeValue(value);
+			if(type == "sort") {
+				return typedValue.valueOf();
+			}
+			else {
+				return column.formatValue(value);
 			}
 		};
 
+		var type = reportType.columns[columnIndex] && reportType.columns[columnIndex].type || "string";
+
 		return {
-			title: reportType.shortColumnsHeader && reportType.shortColumnsHeader[columnIndex] || reportType.columnsHeader[columnIndex] || column,
-			type: typeMapping[reportType.columns[columnIndex] && reportType.columns[columnIndex].type || "string"] || "string",
+			title: reportType.columns[columnIndex] && reportType.columns[columnIndex].header || column,
+			type: typeMapping[type] || "string",
 			defaultContent: "&mdash;",
 			data: column,
-			render: reportType.columns[columnIndex] && rendererMapping[reportType.columns[columnIndex].type || "string"]
+			render: reportType.columns[columnIndex] && renderer,
+			className: 'type-' + type
 		};
 	});
 
@@ -212,7 +224,7 @@ widgetry.reportDatatable.displayWidget = function(widget, dashdisp, element, max
 					<div class="content"></div>\
 				</div>'),
 
-				current: undefined,
+				current: $(undefined),
 
 				previousNext: function(orientation) {
 					if(this.current == undefined) {
@@ -279,7 +291,7 @@ widgetry.reportDatatable.displayWidget = function(widget, dashdisp, element, max
 							if(col.dataType == "time"){
 								value = moment(value, "X").format("DD/MM/YYYY");
 							}
-							content += '<tr><td style="width: 200px;">' + reportType.columnsHeader[id] + '</td><td>' + value + '</td></tr>';
+							content += '<tr><td style="width: 200px;">' + (col.header || col) + '</td><td>' + value + '</td></tr>';
 						});
 						content += '<tr><td>Last update by</td><td>' + (entry.updatedUser || '') + '</td></tr>';
 						content += '<tr><td>Last update on</td><td>' + (moment(entry.updatedTime, "X").format('HH:mm DD/MM/YYYY') || '') + '</td></tr>';
@@ -308,7 +320,7 @@ widgetry.reportDatatable.displayWidget = function(widget, dashdisp, element, max
 			e.preventDefault();
 		});
 
-		$('html').keydown(function(e){
+		widget.keydownHandler = function(e){
 				switch (e.which) {
 					// Up or Left arrow:
 					case 38:
@@ -321,8 +333,17 @@ widgetry.reportDatatable.displayWidget = function(widget, dashdisp, element, max
 						sideInfo.show(sideInfo.next());
 						e.preventDefault();
 						break;
+					case 27:
+						if(sideInfo.current.length == 0) {
+							$('#maximized-widget').modal('hide');
+						}
+						else {
+							sideInfo.show(undefined);
+						}
+						break;
 				}
-		});
+		};
+		$('html').bind('keydown', widget.keydownHandler);
 	}
 
 	// Request data
@@ -353,4 +374,8 @@ widgetry.reportDatatable.displayWidget = function(widget, dashdisp, element, max
 				} );
 			}
 		});
+};
+
+widgetry.reportDatatable.destroyWidget = function(widget, dashdisp, element, maximized) {
+	widget.keydownHandler && $('html').unbind('keydown', widget.keydownHandler);
 };

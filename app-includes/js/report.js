@@ -30,7 +30,7 @@ var Report = function(urlData, typeName, all, team, cameleon){
 	this.team = team;
 	this.cameleon = cameleon;
 	this.pendingSpark = 0;
-	
+
 	var thisR = this;
 	$(document).ready(function(){
 		// Load data
@@ -54,6 +54,11 @@ Report.prototype.load = function(){
 		success: function(result){
 			thisR.data = result.data;
 			thisR.type = result.dataType;
+
+      if(thisR.type.columns) {
+        thisR.type.columns = buildColumnsFromJSON(thisR.type.columns, "report");
+      }
+
 			thisR.userOptions = result.userOptions;
 			thisR.initialize();
 		},
@@ -68,7 +73,7 @@ Report.prototype.importSpark = function(row){
 	var thisR = this;
 	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
 	var entry = thisR.currentData[data_row];
-	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true 
+	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true
 		&& typeof entry.ref == "string" && entry.ref != "" && typeof entry.source == "string" && entry.source != ""){
 		var mapping = {
 			"spark" : "sparksDeal",
@@ -135,7 +140,7 @@ Report.prototype.initialize = function(){
 		});
 		$("#cmd-cameleon").show();
 	}
-	
+
 
 	// Info markdown
 	$('#modal-info-markdown').html(marked(reportMarkdown[thisR.type.code]));
@@ -171,7 +176,7 @@ Report.prototype.initialize = function(){
 			col.renderer = function(instance, TD, row, col, prop, value, cellProperties){
 				$(TD).css('text-align', 'center');
 				if(value == "pending"){
-					$(TD).html('<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>'); 
+					$(TD).html('<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>');
 				}
 				else{
 					if(value == "done"){
@@ -183,7 +188,7 @@ Report.prototype.initialize = function(){
 						$(TD).css('color', 'red');
 					}
 					else{
-						$(TD).html('<span class="glyphicon glyphicon-download" aria-hidden="true"></span>'); 
+						$(TD).html('<span class="glyphicon glyphicon-download" aria-hidden="true"></span>');
 					}
 					$(TD).off().dblclick(function(event){
 						event.stopImmediatePropagation();
@@ -231,6 +236,7 @@ Report.prototype.initialize = function(){
 		else{
 			$($('#cmd-show-all button')[0]).click(function(){post(".", {showAll: true});});
 		}
+
 		thisR.columnsMap.business.source.forEach(function(biz) {
 			var link = $('<a href="#"></a>').html(biz).click(function(){post(".", {showAll: biz});});
 			if(thisR.all == biz){
@@ -266,7 +272,7 @@ Report.prototype.initialize = function(){
 	if(typeof thisR.team == "string"){
 		$('#cmd-search-box').val(thisR.team);
 	}
-	
+
 	// Copy header to clipboard
 	var clipboardClient = new ZeroClipboard($("#cmd-copy-header"));
 	clipboardClient.on( "copy", function (event) {
@@ -278,7 +284,7 @@ Report.prototype.initialize = function(){
 		clipboard.setData( "text/plain", rtfString );
 		clipboard.setData("application/rtf", "{\\rtf1\\ansi\deff0" + rtfString + "}}");
 	});
-	
+
 	// Handsontable
 	//thisR.currentData = thisR.data.filter(function(entry){return !entry.deleted; });
 	thisR.search(true);
@@ -293,7 +299,7 @@ Report.prototype.initialize = function(){
 		renderAllColumns: !thisR.all,
 		fixedColumnsLeft: thisR.type.fixedColumnsLeft,
 		colWidth: thisR.columnsWidth,
-		columns: thisR.type.columns,
+		columns: thisR.type.columns.unshell(),
 		contextMenu: ['row_above', 'row_below', 'remove_row'],
 		afterInit: function(){
 			thisR.handsontableHandler = $('#handsontable-container').handsontable('getInstance');
@@ -308,7 +314,7 @@ Report.prototype.initialize = function(){
 				if(selected[1] == 3 && selected[3] == 3){
 					for(i = Math.min(selected[0], selected[2]); i < Math.max(selected[0], selected[2]) + 1; i++) {
 						thisR.importSpark(i);
-					} 
+					}
 					thisR.pendingSpark += Math.max(selected[0], selected[2]) - Math.min(selected[0], selected[2]) + 1;
 				}
 			}
@@ -344,8 +350,8 @@ Report.prototype.initialize = function(){
 							entry_data.modified = true;
 						}
 						// Sales Credit
-						if(column_code == "marginRunningPct" || column_code == "marginPct" || column_code == "marginEur" 
-							|| column_code == "marginRunningEur" || column_code == "TEC" || column_code == "FTEC" 
+						if(column_code == "marginRunningPct" || column_code == "marginPct" || column_code == "marginEur"
+							|| column_code == "marginRunningEur" || column_code == "TEC" || column_code == "FTEC"
 							|| column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
 							entry_data.netMarginEur = (parseFloat(entry_data.nominalEur) || 0) * ((parseFloat(entry_data.marginPct) || 0) + (parseFloat(entry_data.TEC) || 0) * (parseFloat(entry_data.FTEC) || 0)) + (parseFloat(entry_data.marginRunningEur) || 0);
 							entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
@@ -423,8 +429,8 @@ Report.prototype.initialize = function(){
 			}
 		}
 	});
-	
-	
+
+
 	// Commands
 	// __Discard changes
 	$('#cmd-confirm-discard').click(function(){
@@ -450,13 +456,13 @@ Report.prototype.initialize = function(){
 		//thisR.search();
 	});
 };
-	
+
 Report.prototype.save = function(){
 	var thisR = this;
 	var modifiedData = thisR.data.filter(function(entry){return entry.modified;});
-	if(modifiedData.length == 0){ 
+	if(modifiedData.length == 0){
 		$('#modal-save').modal('hide');
-		return true; 
+		return true;
 	}
 	$('#cmd-confirm-save').button('loading');
 	// Remove import
@@ -502,7 +508,7 @@ Report.prototype.beforeSave = function(){
 	});
 	return result;
 };
-		
+
 Report.prototype.isEntryEmpty = function(entry){
 	var thisR = this;
 	var answer = true;

@@ -40,6 +40,13 @@ Dashboard.prototype.load = function(){
 			thisD.argList = result.argList;
 			thisD.userOptions = result.userOptions;
 			thisD.reportTypeList = result.reportTypeList;
+
+			for(var i = 0; i < thisD.reportTypeList.length; i++) {
+				if(thisD.reportTypeList[i].columns) {
+					thisD.reportTypeList[i].columns = buildColumnsFromJSON(thisD.reportTypeList[i].columns, "dashboard");
+				}
+			}
+
 			thisD.initialize();
 		},
 		error: function(error, text){
@@ -105,10 +112,15 @@ Dashboard.prototype.initialize = function(){
 	});
 	$('#dash-search-box').typeahead({
 		source: thisD.searchTypeahead,
+		minLength: 0,
+		autoSelect: false,
 		updater: function(item){
 			thisD.displayDashdispFromName(item);
 			$('#dash-search-box').val('').blur();
 		}
+	});
+	$('#dash-search-box').click(function() {
+		$(this).typeahead("lookup");
 	});
 
 	// Event after "ENTER" in the search bar

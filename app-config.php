@@ -4,47 +4,47 @@ define('MODE_FRED', 'mode_fred');
 define('MODE_SOCGEN', 'mode_socgen');
 
 // ** MODE ** //
-define('MODE', MODE_SOCGEN);
-#define('MODE', MODE_FRED);
+//define('MODE', MODE_SOCGEN);
+define('MODE', MODE_FRED);
 
 // ** VERSION SOCGEN ** //
 if(MODE == MODE_SOCGEN){
 	/** Application URL */
-	define('APPURL', 'http://markeng.fr.world.socgen/Reporting/');
+	//define('APPURL', 'http://markeng.fr.world.socgen/Reporting/');
 
 	/** MySQL hostname */
-	define('DB_HOST', 'localhost:3306');
+	//define('DB_HOST', 'localhost:3306');
 
 	/** The name of the database */
-	define('DB_NAME', 'report');
+	//define('DB_NAME', 'report');
 
 	/** MySQL database username */
-	define('DB_USER', 'report');
+	//define('DB_USER', 'report');
 
 	/** MySQL database password */
-	define('DB_PASSWORD', 'Bigchange14');
+	//define('DB_PASSWORD', 'Bigchange14');
 }
 
 // ** VERSION FRED ** //
 if(MODE == MODE_FRED){
 	/** Application URL */
-	define('APPURL', 'http://sol-eng.fr/app/');
+	define('APPURL', 'http://markeng.fr.world.socgen/Reporting_test/');
 
 	/** MySQL hostname */
-	define('DB_HOST', 'solengfrejwp.mysql.db');
+	define('DB_HOST', 'localhost:3306');
 
 	/** The name of the database */
-	define('DB_NAME', 'solengfrejwp');
+	define('DB_NAME', 'report_test');
 
 	/** MySQL database username */
-	define('DB_USER', 'solengfrejwp');
+	define('DB_USER', 'report_test');
 
 	/** MySQL database password */
 	define('DB_PASSWORD', 'Bigchange14');
 }
 // ** COMMON ** //
 
-/** Password for spark exception. 
+/** Password for spark exception.
  *  Use as $_POST['spark'] = password
 */
 define('SPARK_PASSWORD', 'Bigchange15');

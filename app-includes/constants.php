@@ -54,8 +54,8 @@ $include_report .= '<script src="' . APPURL . APPINC . 'js/marked.min.js"></scri
 $include_report .= '<script src="' . APPURL . APPINC . 'js/pikaday.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_report .= "<script>reportMarkdown = " . file_get_contents(ABSPATH."report-markdown.json") . ";</script>" . PHP_EOL;
 $include_report .= '<script src="' . APPURL . APPINC . 'js/handsontable.full.js?rand=' . time() . '"></script>' . PHP_EOL;
+$include_report .= '<script src="' . APPURL . APPINC . 'js/column.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_report .= '<script src="' . APPURL . APPINC . 'js/report.js?rand=' . time() . '"></script>' . PHP_EOL;
-//$include_report .= '<script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"></script>' . PHP_EOL;
 define( 'INCLUDE_REPORT', $include_report );
 
 $include_dashboard_admin = '<link rel="stylesheet" media="screen" href="' . LIB . '/bootstrap-tagsinput-0.5.0/bootstrap-tagsinput.css">' . PHP_EOL;
@@ -78,8 +78,10 @@ $include_dashboard .= '<script src="' . LIB . '/highcharts-4.1.1/highcharts.js">
 $include_dashboard .= '<script src="' . LIB . '/highcharts-4.1.1/modules/exporting.js"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . LIB . '/highcharts-4.1.1/modules/canvas-tools.js"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . LIB . '/jspdf-1.0.272/jspdf.min.js"></script>' . PHP_EOL;
-$include_dashboard .= '<script src="' . LIB . '/highcharts-4.1.1/non-official-modules/highcharts-export-clientside.js"></script>' . PHP_EOL;
+$include_dashboard .= '<script src="' . LIB . '/highcharts-4.1.1/non-official-modules/export-csv.js"></script>' . PHP_EOL;
+$include_dashboard .= '<script src="' . LIB . '/highcharts-4.1.1/non-official-modules/highcharts-export-clientside.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_dashboard .= $widget_include;
+$include_dashboard .= '<script src="' . APPURL . APPINC . 'js/column.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . APPURL . APPINC . 'js/dashboard.js?rand=' . time() . '"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . APPURL . APPINC . 'js/datasource.js?rand=' . time() . '"></script>' . PHP_EOL;
 define( 'INCLUDE_DASHBOARD', $include_dashboard );

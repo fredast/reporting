@@ -34,7 +34,7 @@ var getAvailableColumns = function(reportListTypes) {
 				columnsIndex[currentColumn.data] = columnIndex;
 
 				columns[columnIndex] = Object.create(currentColumn);
-				columns[columnIndex].header = reportListTypes[i].columnsHeader[j];
+				columns[columnIndex].header = currentColumn.header || currentColumn.data || 'err';
 				columns[columnIndex].availableIn = [];
 			}
 
@@ -45,12 +45,16 @@ var getAvailableColumns = function(reportListTypes) {
 		}
 	}
 
+	columns.sort(function(a, b) {
+		return a.header.localeCompare(b.header);
+	});
+
 	return columns;
 };
 
 var createTextFilter = function(title, field) {
 	var formGroup = $('<div class="form-group">\
-		<label for="field-' + field + '" class="col-xs-4 control-label">' + title + '</label>\
+		<label for="field-' + field + '" class="col-xs-3 control-label">' + title + '</label>\
 		<div class="col-xs-8">\
 			<input class="form-control input-sm" id="field-' + field + '" placeholder="Search Term 1, Search Term 2, &hellip;" />\
 		</div>\
@@ -102,7 +106,7 @@ var createTextFilter = function(title, field) {
 
 var createNumberFilter = function(title, field) {
 	var formGroup = $('<div class="form-group">\
-		<label for="field-' + field + '-min" class="col-xs-4 control-label">' + title + '</label>\
+		<label for="field-' + field + '-min" class="col-xs-3 control-label">' + title + '</label>\
 		<div class="col-xs-4">\
 			<input class="form-control input-sm" id="field-' + field + '-min" placeholder="Min" />\
 		</div>\
@@ -144,7 +148,7 @@ var createNumberFilter = function(title, field) {
 
 var createDateFilter = function(title, field) {
 	var formGroup = $('<div class="form-group">\
-		<label for="field-' + field + '-min" class="col-xs-4 control-label">' + title + '</label>\
+		<label for="field-' + field + '-min" class="col-xs-3 control-label">' + title + '</label>\
 		<div class="col-xs-4 has-feedback">\
 			<input class="form-control input-sm" id="field-' + field + '-min" placeholder="Min (DD/MM/YYYY)" />\
 			<span class="glyphicon glyphicon-flash form-control-feedback hidden" id="field-' + field + '-min-feedback" aria-hidden="true"></span>\
@@ -262,7 +266,7 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 
 	dashdisp.datasource.addFilter(function(entry) {
 		filters.forEach(function(filter) {
-			filter.prepareFunction && filter.prepareFunction();
+			filter && filter.prepareFunction && filter.prepareFunction();
 		});
 		return filters.every(function(filter) {
 			return filter.filterFunction(entry);
@@ -274,17 +278,61 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 	var titleWrapper = $('<form class="form-horizontal col-xs-10"></form>').append(quickSearch.formGroup);
 	titleWrapper.appendTo(heading);
 	quickSearch.inputs.keyup(refreshDataSource);
+	quickSearch.inputs.attr('tabindex', widget.id * 10 + 1);
 
+	var newFilter = $('<input class="form-control input-sm" placeholder="Enter field name" autocomplete="off"></input>');
+	newFilter.attr('tabindex', widget.id * 10 + 3);
+
+	var removeFilter = function(index) {
+		if(filters[index]) {
+			filters[index].formGroup.remove();
+			delete filters[index];
+
+			if($(".form-horizontal", body).children().length == 0) {
+				body.addClass('hidden');
+			}
+			$('#dashContainer').packery();
+
+			// Adds a tiny timeout or it will not work properly
+			setTimeout(function() {
+				$(newFilter).focus();
+			}, 200);
+
+			refreshDataSource();
+		}
+	};
 
 	var addFilter = function(creationFunction, label, field) {
 		var filter = creationFunction.call(null, label, field);
-		filters.push(filter);
+		var newLength = filters.push(filter);
+
+		var deleteLink = $('<a href="#" class="col-xs-1 btn btn-link text-left">\
+				<span class="glyphicon glyphicon-remove"></span>\
+			</a>')
+			.click(function (e) {
+				removeFilter(newLength - 1);
+				e.preventDefault();
+			});
+		filter.formGroup.append(deleteLink);
+
 		form.append(filter.formGroup);
-		filter.inputs.keyup(refreshDataSource);
+		filter.inputs
+			.keyup(refreshDataSource)
+			.attr('tabindex', widget.id * 10 + 2);
+
+		body.removeClass('hidden');
+
+		// Adds a tiny timeout or it will not work properly
+		setTimeout(function() {
+			filter.inputs.first().focus();
+		}, 200);
+
+
+		$('#dashContainer').packery();
+
 		return filter;
 	};
 
-	var newFilter = $('<input class="form-control input-sm" placeholder="Enter field name" autocomplete="off"></input>');
 	heading.append($('<div class="pull-right input-group" style="width: 270px;">\
 		<span class="input-group-addon"><span class="glyphicon glyphicon-plus"></span></span>\
 		</div>').append(newFilter));
@@ -292,7 +340,6 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 	var availableColumns = getAvailableColumns(widgetry.thisD.reportTypeList);
 	newFilter.typeahead({
 		minLength: 0,
-		showHintOnFocus: true,
 		autoSelect: false,
 		items: 'all',
 		displayText: function(column) {
@@ -307,13 +354,19 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 			cb(matches);
 		},
 		afterSelect: function(column) {
-			newFilter.val('');
+			newFilter.val(''); console.log(column)
 			var filter = addFilter(creationFunction[column.type] || createTextFilter, column.header, column.data);
-			body.removeClass('hidden');
-			filter.inputs.first().focus();
-			$('#dashContainer').packery();
 		}
 	});
+	newFilter.click(function() {
+		$(this).typeahead("lookup");
+	});
+
+	// Desactivate submit on forms.
+	$('form', element)
+		.submit(function(e) {
+			return false;
+		});
 
 	element
 		.append(body);

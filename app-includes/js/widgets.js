@@ -92,9 +92,19 @@ var widgetry = {
 		}
 		// Update element content
 		$(element).attr('class', 'widget ' + widget.width + ' ' + widget.height);
-		$(element).find('.widget-content').empty().append('<div class="show-settings"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span><span class="sr-only">Settings</span></div>').find('.show-settings').click(function(){ widgetry.thisDA.showModalWidget(widget); });
+    var heading =
+      $('<div class="panel-heading"></div>')
+      .text(widget.title)
+      .append('<div class="toolbar">\
+        <button class="show-settings"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span></button>\
+        </div>');
+    heading
+      .find('.show-settings').click(function(){ widgetry.thisDA.showModalWidget(widget); });
 		// Show title
-		$(element).find('.widget-content').append($('<div class="panel-heading"></div>').text(widget.title));
+		$(element)
+      .find('.widget-content')
+      .empty()
+      .append(heading);
 		// Specific
 		typeof widgetry[type].showWidget == 'function' ? widgetry[type].showWidget(widget, element) : null;
 	},
@@ -120,7 +130,7 @@ var widgetry = {
 
         // Creating the modal container if necessary
         if($("#maximized-widget").length == 0) {
-          $('#dashContainer').append('\
+          $('body').append('\
             <div class="modal fade" id="maximized-widget">\
               <div class="modal-dialog modal-fullwidth">\
                 <div class="modal-content">\
@@ -161,10 +171,19 @@ var widgetry = {
               var thisWidget = widget;
             }
 
+            modal.data('widget', thisWidget);
+
             if(typeof widgetry[widget.type].displayWidget == 'function') {
               widgetry[widget.type].displayWidget(thisWidget, dashdisp, $('.modal-body', modal), true);
             }
-          })
+          });
+
+          $("#maximized-widget").on('hidden.bs.modal', function(event) {
+              var modal = $(this);
+              var widget = modal.data('widget');
+              typeof widgetry[type].destroyWidget == 'function' &&
+                widgetry[widget.type].destroyWidget(widget, dashdisp, $('.modal-body', modal), true);
+            });
         }
       }
 
@@ -180,7 +199,6 @@ var widgetry = {
       wrapper = $(".widget-content", element);
     }
 
-
     // Replace argument
     if(typeof dashdisp.argObj == 'object'){
       var thisWidget = deepReplace(widget, '\\[' + dashdisp.argObj.code + '\\]', dashdisp.argValue);
@@ -191,6 +209,21 @@ var widgetry = {
 
 		// Specific
 		typeof widgetry[type].displayWidget == 'function' ? widgetry[type].displayWidget(thisWidget, dashdisp, wrapper) : null;
+
+    // Register a new kind of event that is called when an element is destroyed.
+    (function($){
+      $.event.special.destroyed = {
+        remove: function(o) {
+          if (o.handler) {
+            o.handler.apply(this,arguments);
+          }
+        }
+      }
+    })(jQuery);
+
+    wrapper.bind('destroyed', function() {
+        typeof widgetry[type].destroyWidget == 'function' ? widgetry[type].destroyWidget(thisWidget, dashdisp, wrapper) : null;
+      });
 	}
 };
 

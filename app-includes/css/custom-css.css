@@ -153,13 +153,6 @@ width: 100% !important;
 	font-size: 11px;
 }
 
-.widget-content .show-settings {
-	position: absolute;
-	bottom: 12px;
-	right: 15px;
-	cursor:pointer;
-}
-
 .widget-content .panel-heading {
 	height: 28px;
 	padding: 6px;
@@ -178,26 +171,32 @@ width: 100% !important;
 	top: 7px;
 }
 
-.widget-content input {
+/* Bootstrap modifications to make dashboard more compact */
+
+#dashContainer .widget-content input {
 	font-size: 10px;
+}
+
+#dashContainer .widget-content input,
+#dashContainer .widget-content .btn-link {
 	padding: 3px 5px;
 	height: 23px;
 }
 
-.widget-content .input-group-addon {
+#dashContainer .widget-content .input-group-addon {
 	font-size: 10px;
 	padding: 4px 7px 5px 7px;
 }
 
-.widget-content .control-label {
+#dashContainer .widget-content .control-label {
 	padding-top: 5px;
 }
 
-.widget-content .panel-body {
+#dashContainer .widget-content .panel-body {
 	padding: 10px;
 }
 
-.widget-content .dropdown-menu {
+#dashContainer .widget-content .dropdown-menu {
 	font-size: 10px;
 }
 
@@ -277,6 +276,11 @@ th.sorting_desc:after {
 	content: "\e252";
 }
 
+/* Alignment in cells */
+table .type-numeric {
+	text-align: right;
+}
+
 /* For full-width modals */
 
 .modal-fullwidth {
@@ -292,15 +296,32 @@ th.sorting_desc:after {
 	height: calc(100% - 60px);
 }
 
+/* Side info in DataTables and Chart */
+.sideinfo {
+	height:	100%;
+	overflow: auto;
+	padding-right: 0;
+	border-left: 2px solid #e5e5e5;
+}
+
+.sideinfo .table-responsive,
+.sideinfo .content {
+	height: calc(100% - 40px);
+	overflow: auto;
+}
+
+.modal-body .col-xs-7 {
+	padding-left: 0;
+}
+
 /* Table customisation in datatable reports */
 .reportDatatable table,
 .reportDatatable .table-responsive {
 	width: 100% !important;
 }
-.reportDatatable .table-responsive,
-.reportDatatable .sideinfo .content {
+
+.reportDatatable .table-responsive {
 	height: calc(100% - 40px);
-	overflow: auto;
 }
 
 .reportDatatable .dataTables_wrapper th,
@@ -328,17 +349,7 @@ th.sorting_desc:after {
 	float: right;
 	position: relative;
 	right: 1px;
-}
-
-.reportDatatable .sideinfo {
-	height:	100%;
-	overflow: auto;
-	padding-right: 0;
-	border-left: 1px solid #e5e5e5;
-}
-
-.reportDatatable .dataTables_wrapper.col-xs-7 {
-	padding-left: 0;
+	margin-bottom: 6px;
 }
 
 .reportDatatable .dataTables_wrapper {
@@ -358,6 +369,10 @@ th.sorting_desc:after {
 
 .reportChart .widget-content {
 	overflow: hidden;
+}
+
+.reportChart .wrapper {
+	height: 100%;
 }
 
 .reportChart.height-100 .highcharts {
@@ -396,6 +411,26 @@ th.sorting_desc:after {
 	height: calc(100% - 42px);
 }
 
+.reportChart.modal-body .highcharts-container {
+	margin-top: 6px;
+}
+
+.reportChart .show-data {
+	margin-left: 16px;
+}
+
+.reportChart .dataTables_wrapper table {
+	width: 100% !important;
+}
+
+.reportChart .dataTables_wrapper th,
+.reportChart .dataTables_wrapper td {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	max-width: 80px;
+}
+
 /* WIDGET FILTER */
 
 .reportFilter .panel-heading {
@@ -417,7 +452,7 @@ th.sorting_desc:after {
 }
 
 .reportFilter .form-horizontal {
-	max-width: 500px;
+	max-width: 600px;
 }
 
 .reportFilter .form-control-feedback {
@@ -426,4 +461,8 @@ th.sorting_desc:after {
 
 .reportFilter .form-group {
 	margin-bottom: 5px;
+}
+
+.reportFilter .btn.text-left {
+	text-align: left;
 }
