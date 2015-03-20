@@ -22,6 +22,13 @@ function post(path, params, method) {
     form.submit();
 }
 
+function uniq(a) {
+    var seen = {};
+    return a.filter(function(item) {
+        return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+    });
+}
+
 var Report = function(urlData, typeName, all, team, cameleon){
 	this.urlData = urlData;
 	this.data = [];
@@ -84,27 +91,37 @@ Report.prototype.importSpark = function(row){
 		$.ajax({
 			url: "http://markeng.fr.world.socgen/mapping/" + source + "/" + entry.ref,
 			dataType: 'json',
-			success: function(result){
-				console.log(result);
-				if(typeof result == "object"){
-					for (var key in result){
-						entry[key] = result[key];
+			statusCode: {
+				200: function(result){
+					console.log(result);
+					if(typeof result == "object"){
+						for (var key in result){
+							entry[key] = result[key];
+						}
+						entry.import = 'done';
 					}
-					entry.import = 'done';
-				}
-				else{
+					else{
+						entry.import = 'error';
+					}
+				},
+				404: function(result){
+					console.log(result);
 					entry.import = 'error';
-				}
-				thisR.pendingSpark -= 1;
-				if(thisR.pendingSpark <= 0){
-					thisR.handsontableHandler.render();
-					setTimeout(function() { thisR.handsontableHandler.render(); }, Math.max(2*thisR.data.length, 200));
+					if(typeof result == "object"){
+						entry.status = result.status;
+					}
+					else{
+						entry.import = 'error';
+					}
 				}
 			},
 			error: function(error, text){
 				console.log(error);
 				console.log(error.responseText);
-				thisR.handsontableHandler.setDataAtRowProp(row, 'import', 'error');
+				entry.status = "TECHNICAL ERROR";
+				entry.import = 'error';
+			},
+			complete: function(){
 				thisR.pendingSpark -= 1;
 				if(thisR.pendingSpark <= 0){
 					thisR.handsontableHandler.render();
@@ -226,6 +243,12 @@ Report.prototype.initialize = function(){
 		thisR.columnsMap[col.data] = col;
 	});
 
+	// Business dropdown
+	var business_short = uniq(thisR.columnsMap.business.source.map(function(biz){
+		return biz.split(' ')[0];
+	}));
+	var business_dropdown = business_short.concat(thisR.columnsMap.business.source);
+
 	// Show all
 	if(typeof thisR.userOptions.access == "object" && (thisR.userOptions.access.indexOf("ADMIN") >= 0 || thisR.userOptions.access.indexOf("SUPERUSER") >= 0)){
 		if(thisR.all){
@@ -237,7 +260,7 @@ Report.prototype.initialize = function(){
 			$($('#cmd-show-all button')[0]).click(function(){post(".", {showAll: true});});
 		}
 
-		thisR.columnsMap.business.source.forEach(function(biz) {
+		business_dropdown.forEach(function(biz) {
 			var link = $('<a href="#"></a>').html(biz).click(function(){post(".", {showAll: biz});});
 			if(thisR.all == biz){
 				link.attr('class', 'btn-warning');
@@ -262,7 +285,7 @@ Report.prototype.initialize = function(){
 	else{
 		$($('#cmd-show-team button')[0]).click(function(){post(".", {showTeam: true});});
 	}
-	thisR.columnsMap.business.source.forEach(function(biz) {
+	business_dropdown.forEach(function(biz) {
 		var link = $('<a href="#"></a>').html(biz).click(function(){post(".", {showTeam: biz});});
 		if(thisR.team == biz){
 			link.attr('class', 'btn-warning');
@@ -465,8 +488,14 @@ Report.prototype.save = function(){
 		return true;
 	}
 	$('#cmd-confirm-save').button('loading');
+	
 	// Remove import
-	modifiedData.forEach(function(entry){ delete entry['import']; });
+	modifiedData.forEach(function(entry){ 
+		if(entry.import == 'error'){
+			delete entry.status;
+		}
+		delete entry.import;
+	});
 
 	console.log(modifiedData);
 	$.ajax({
