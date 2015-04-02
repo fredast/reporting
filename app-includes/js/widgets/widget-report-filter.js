@@ -1,5 +1,5 @@
 
-var widgetParams = {name: "ReportFilter", id:"reportFilter", sizes: ["medium", "large", "extra-large", "full-width"]};
+var widgetParams = {name: "Report Filter", id:"reportFilter", sizes: ["medium", "large", "extra-large", "full-width"]};
 
 widgetry.list.push(widgetParams);
 widgetry[widgetParams.id] = widgetParams;

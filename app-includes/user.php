@@ -43,11 +43,6 @@ function get_user_options(){
 	// Update the user
 	$req['json_private']->last_visit = time();	
 	$appdb->query_void('UPDATE ' . TABLE_USER . ' SET json_private = ? WHERE user = ?', array(json_encode($req['json_private']), $login));
-	// Pass the login and the access rights
-	$req['json_public']->login = $login;
-	if(isset($req['json_private']->access)){
-		$req['json_public']->access = $req['json_private']->access;
-	}
 	// Save the user options as a global variable
 	$user_options = $req;
 }
@@ -55,13 +50,13 @@ function get_user_options(){
 function give_admin_rights(){
 	global $appdb, $user_options;
 	if(isset($user_options['json_private']->access) and (array_search('ADMIN', $user_options['json_private']->access) == true or 
-		array_search('SUPERUSER', $user_options['json_private']->access) == true)){
+		array_search('SUPERVIEWER', $user_options['json_private']->access) == true)){
 		$req = $appdb->query_all('SELECT user FROM ' . TABLE_USER, array());
 		$user_list = array();
 		foreach($req as &$entry){
 			$user_list[] = $entry["user"];
 		}
-		$user_options['json_public']->teamWrite = $user_list;
+		$user_options['json_private']->teamWrite = $user_list;
 	}
 }
 

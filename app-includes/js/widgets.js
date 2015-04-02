@@ -108,11 +108,70 @@ var widgetry = {
 		// Specific
 		typeof widgetry[type].showWidget == 'function' ? widgetry[type].showWidget(widget, element) : null;
 	},
+  addWidgetModal: function(dashdisp) {
+    $("#maximized-widget").remove();
+
+    $('body').append('\
+      <div class="modal fade" id="maximized-widget">\
+        <div class="modal-dialog modal-fullwidth">\
+          <div class="modal-content">\
+            <div class="modal-header">\
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
+              <h4 class="modal-title">Title</h4>\
+            </div>\
+            <div class="modal-body">\
+            </div>\
+          </div>\
+        </div>');
+
+    $("#maximized-widget").on('show.bs.modal', function(event) {
+      var modal = $(this);
+      var button = $(event.relatedTarget),
+          widgetId = button.data('widgetid');
+      var widget = dashdisp.dash.widgets.filter(function(widget) { return widget.id == widgetId; })[0];
+
+      $('.modal-title', modal).html(widget.title);
+      $('.modal-body', modal)
+        .empty()
+        .replaceWith('<div class="modal-body widget-content ' + widget.type + '"></div>');
+    });
+
+    $("#maximized-widget").on('shown.bs.modal', function(event) {
+      var modal = $(this);
+      var button = $(event.relatedTarget),
+          widgetId = button.data('widgetid');
+
+      var widget = dashdisp.dash.widgets.filter(function(widget) { return widget.id == widgetId; })[0];
+
+      // Replace argument
+      if(typeof dashdisp.argObj == 'object'){
+        var thisWidget = deepReplace(widget, '\\[' + dashdisp.argObj.code + '\\]', dashdisp.argValue);
+      }
+      else{
+        var thisWidget = widget;
+      }
+
+      modal.data('widget', thisWidget);
+
+      if(typeof widgetry[widget.type].displayWidget == 'function') {
+        widgetry[widget.type].displayWidget(thisWidget, dashdisp, $('.modal-body', modal), true);
+      }
+    });
+
+    $("#maximized-widget").on('hidden.bs.modal', function(event) {
+      var modal = $(this);
+      var widget = modal.data('widget');
+      typeof widgetry[type].destroyWidget == 'function' &&
+        widgetry[widget.type].destroyWidget(widget, dashdisp, $('.modal-body', modal), true);
+    });
+  },
 	displayWidget: function(widget, dashdisp){
 		var type = widget.type;
 		var element = $('#dashContainer .widget').filter(function(index, elmt){ return $(elmt).attr('widgetid') == widget.id; })[0];
 
     var wrapper;
+
+    this.addWidgetModal(dashdisp);
 
 		// Create a new if doesn't exist
 		if(typeof element == 'undefined'){
@@ -127,64 +186,6 @@ var widgetry = {
             <span class="glyphicon glyphicon-new-window"></span>\
           </button>');
         header.append($('<div class="toolbar"></div>').append(button));
-
-        // Creating the modal container if necessary
-        if($("#maximized-widget").length == 0) {
-          $('body').append('\
-            <div class="modal fade" id="maximized-widget">\
-              <div class="modal-dialog modal-fullwidth">\
-                <div class="modal-content">\
-                  <div class="modal-header">\
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\
-                    <h4 class="modal-title">Title</h4>\
-                  </div>\
-                  <div class="modal-body">\
-                  </div>\
-                </div>\
-              </div>');
-
-          $("#maximized-widget").on('show.bs.modal', function(event) {
-            var modal = $(this);
-            var button = $(event.relatedTarget),
-                widgetId = button.data('widgetid');
-
-            var widget = dashdisp.dash.widgets.filter(function(widget) { return widget.id == widgetId; })[0];
-
-            $('.modal-title', modal).html(widget.title);
-            $('.modal-body', modal)
-              .empty()
-              .replaceWith('<div class="modal-body widget-content ' + widget.type + '"></div>');
-          });
-
-          $("#maximized-widget").on('shown.bs.modal', function(event) {
-            var modal = $(this);
-            var button = $(event.relatedTarget),
-                widgetId = button.data('widgetid');
-
-            var widget = dashdisp.dash.widgets.filter(function(widget) { return widget.id == widgetId; })[0];
-
-            // Replace argument
-            if(typeof dashdisp.argObj == 'object'){
-              var thisWidget = deepReplace(widget, '\\[' + dashdisp.argObj.code + '\\]', dashdisp.argValue);
-            }
-            else{
-              var thisWidget = widget;
-            }
-
-            modal.data('widget', thisWidget);
-
-            if(typeof widgetry[widget.type].displayWidget == 'function') {
-              widgetry[widget.type].displayWidget(thisWidget, dashdisp, $('.modal-body', modal), true);
-            }
-          });
-
-          $("#maximized-widget").on('hidden.bs.modal', function(event) {
-              var modal = $(this);
-              var widget = modal.data('widget');
-              typeof widgetry[type].destroyWidget == 'function' &&
-                widgetry[widget.type].destroyWidget(widget, dashdisp, $('.modal-body', modal), true);
-            });
-        }
       }
 
       wrapper = $('<div class="widget-content panel panel-default"></div>');

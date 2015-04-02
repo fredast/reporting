@@ -69,8 +69,8 @@ widgetry.reportChart.displaySettings = function(widget){
 
 		container.append('<h4>Custom formats</h4>\
 		<p class="help-block">\
-			Overrides the column format. For numeric columns, syntax is provided by <a href="http://numeraljs.com">numeral.js</a>, \
-			for date ones, <a href="http://momentjs.com/docs/#/displaying/format/">moment.js</a>.\
+			Overrides the column format. For numeric columns, syntax is provided by <a target="_blank" href="http://numeraljs.com">numeral.js</a>, \
+			for date ones, <a target="_blank" href="http://momentjs.com/docs/#/displaying/format/">moment.js</a>.\
 		</p>');
 
 		container.append('<label for="dash-wg-in-xaxis-format">X-axis</label>');
@@ -92,18 +92,11 @@ widgetry.reportChart.displaySettings = function(widget){
 			.appendTo(container);
 
 		container.append('<label for="dash-wg-in-series">Series</label>');
-		container.append('<select multiple id="dash-wg-in-series"></select>');
-		$('#dash-wg-in-series').tagsinput({
-			trimValue: true,
-			confirmKeys: [13, 188, 190, 32, 186],
-			tagClass: 'label label-default',
-			typeahead: {source: reportType.columns.map(function(obj){return obj.data;})},
-			freeInput: false
-		});
-		$('#dash-wg-in-series').off().on('itemAdded itemRemoved', function(){
-			var placeholder = $('#dash-wg-in-series').tagsinput('items').length > 0 ? '' : 'Tags...';
-			$('#dash-wg-in-series').next().find('input').attr({'placeholder':placeholder});
-		});
+		$('<select class="form-control" id="dash-wg-in-series">\
+				<option value="no-serie">(none)</option>\
+			</select>')
+			.append(buildOptionsForColumns(reportType))
+			.appendTo(container);
 
 		// __Filter
 		widgetry.displayFilterSettings(container, reportType);
@@ -116,18 +109,14 @@ widgetry.reportChart.displaySettings = function(widget){
 			$('#dash-wg-in-cumulative input[value=' + widget.cumulative + ']').attr('checked', true);
 		}
 		if(widget.stacked) {
-			$('#dash-wg-in-stacked input[value=' + widget.cumulative + ']').attr('checked', true);
+			$('#dash-wg-in-stacked input[value=' + widget.stacked + ']').attr('checked', true);
 		}
 		$('#dash-wg-in-xaxis').val(widget.xaxis).trigger('change');
 		$('#dash-wg-in-xaxis-format').val(widget.xaxisFormat).trigger('change');
 		$('#dash-wg-in-yaxis').val(widget.yaxis).trigger('change');
 		$('#dash-wg-in-yaxis-format').val(widget.yaxisFormat).trigger('change');
 		$('#dash-wg-in-aggregation').val(widget.aggregation).trigger('change');
-		if(typeof widget.series == 'object'){
-			widget.series.forEach(function(col){
-				$('#dash-wg-in-series').tagsinput('add', col);
-			});
-		}
+		$('#dash-wg-in-series').val(widget.series).trigger('change');
 		$('#dash-wg-in-filter').val(widget.filter).trigger('change');
 	}
 };
@@ -142,7 +131,7 @@ widgetry.reportChart.editWidget = function(widget){
 	widget.yaxis = $('#dash-wg-in-yaxis').val();
 	widget.yaxisFormat = $('#dash-wg-in-yaxis-format').val();
 	widget.aggregation = $('#dash-wg-in-aggregation').val();
-	widget.series = $('#dash-wg-in-series').tagsinput('items').slice();
+	widget.series = $('#dash-wg-in-series').val();
 	widget.filter = $('#dash-wg-in-filter').val();
 };
 
@@ -161,10 +150,10 @@ widgetry.reportChart.showWidget = function(widget, element){
 		.append('<dt>Axes</dt>')
 		.append('<dd>' + widget.xaxis + " / " + widget.yaxis + '</dd>');
 
-	if(widget.series && widget.series.length > 0) {
+	if(widget.series != 'no-serie') {
 		container
 			.append('<dt>Series</dt>')
-			.append('<dd>' + widget.series.join(", ") + '</dd>');
+			.append('<dd>' + widget.series + '</dd>');
 	}
 
 	$(element).find('.widget-content').append(container);
@@ -172,7 +161,7 @@ widgetry.reportChart.showWidget = function(widget, element){
 
 widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximized){
 	var reportType = widgetry.thisD.reportTypeList.filter(function(obj){return obj.code == widget.reportType;})[0];
-console.log();
+
 	var highChartsContainer = $('<div class="highcharts"></div>'),
 			chartWrapper = $('<div class="wrapper"></div>');
 	element.append(chartWrapper.append(highChartsContainer));
@@ -254,7 +243,7 @@ console.log();
 			enabled: false
 		},
 		legend: {
-			enabled: maximized && (widget.series && widget.series.length > 0)
+			enabled: maximized && widget.series != 'no-serie'
 		},
 		xAxis: {
 			type: axisTypeMapping[xColumn.type] || "category",
@@ -264,11 +253,11 @@ console.log();
 				style: {
 					fontSize: (maximized ? '14' : '10') + 'px'
 				}
-			},
-			minRange: 1
+			}
 		},
 		yAxis: {
 			type: axisTypeMapping[yColumn.type],
+      reversedStacks: false,
 			title: "",
 			labels: {
 				formatter: formatter(yColumn, widget.yaxisFormat),
@@ -279,12 +268,29 @@ console.log();
 		},
 		tooltip: {
 			enabled: maximized ? true : false,
-			formatter: formatter(yColumn, widget.yaxisFormat)
+			useHTML: true,
+			headerFormat: '<table><tr><th colspan="3" style="font-weight: bold">{point.key}</th></tr>',
+			pointFormatter: function() {
+				var y = formatter(yColumn, widget.yaxisFormat).apply(this),
+						color = this.color;
+						name = this.series.name;
+
+				var row = '<tr>\
+					<td>' + ((widget.series == 'no-serie' && name == 'no-serie') ? '' : name) + '</td>\
+					<td> <span style="font-weight: bold; color: ' + color + '">' + y + '</span> \
+						<span style="font-size: 10px">' +
+							(this.percentage ? numeraljs(this.percentage / 100).format('0[.]00%') : '') + '</span>\
+					</td>\
+				</tr>';
+				return row;
+			},
+			footerFormat: '</table>',
+			shared: widget.stacked == 'true'
 		},
 		plotOptions: {
 	    series: {
 	        animation: false,
-					stacking: widget.stacked ? "normal": undefined,
+					stacking: widget.stacked == "true" ? "normal": null,
 					states: {
 						hover: {
 							enabled: maximized ? true : false
@@ -310,7 +316,7 @@ console.log();
 			},
 			bar: {
 				dataLabels: {
-					enabled: maximized ? true : false,
+					enabled: (maximized && widget.stacked != 'true') ? true : false,
 					formatter: formatter(yColumn, widget.yaxisFormat),
           align: 'right',
 					x: -5
@@ -318,7 +324,7 @@ console.log();
 			},
 			column: {
 				dataLabels: {
-					enabled: maximized ? true : false,
+					enabled: (maximized && widget.stacked != 'true') ? true : false,
 					formatter: formatter(yColumn, widget.yaxisFormat),
 					y: 30
 				}
@@ -483,7 +489,7 @@ console.log();
 
 			var indexedData = {},
 					indexedKeys = {}; // contains all keys ac
-			var currentSerie = widget.series && widget.series[0];
+			var currentSerie = widget.series;
 
 			reportData.forEach(function(reportRow) {
 				var x, y, serie;

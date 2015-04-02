@@ -37,6 +37,7 @@ var Report = function(urlData, typeName, all, team, cameleon){
 	this.team = team;
 	this.cameleon = cameleon;
 	this.pendingSpark = 0;
+	this.pendingGeo = 0;
 
 	var thisR = this;
 	$(document).ready(function(){
@@ -67,6 +68,7 @@ Report.prototype.load = function(){
       }
 
 			thisR.userOptions = result.userOptions;
+			thisR.user = result.user;
 			thisR.initialize();
 		},
 		error: function(error, text){
@@ -80,8 +82,10 @@ Report.prototype.importSpark = function(row){
 	var thisR = this;
 	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
 	var entry = thisR.currentData[data_row];
+	
 	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true
 		&& typeof entry.ref == "string" && entry.ref != "" && typeof entry.source == "string" && entry.source != ""){
+		thisR.pendingSpark += 1;
 		var mapping = {
 			"spark" : "sparksDeal",
 			"eliot" : "eliotDeal",
@@ -125,6 +129,59 @@ Report.prototype.importSpark = function(row){
 				thisR.pendingSpark -= 1;
 				if(thisR.pendingSpark <= 0){
 					thisR.handsontableHandler.render();
+					if(!thisR.all){
+						setTimeout(function() { thisR.handsontableHandler.validateCells(function(){}); }, Math.max(thisR.data.length, 100));
+					}
+					setTimeout(function() { thisR.handsontableHandler.render(); }, Math.max(2*thisR.data.length, 200));
+				}
+			}
+		});
+	}
+};
+
+Report.prototype.importGeo = function(row){
+	var thisR = this;
+	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
+	var entry = thisR.currentData[data_row];
+	
+	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true && typeof entry.sales == "string"){
+		thisR.pendingGeo += 1;
+		if(typeof entry.tradeDate == "string"){
+			var tradeDate = '/' + entry.tradeDate;
+		}
+		else{
+			var tradeDate = '';
+		}
+		$.ajax({
+			url: "http://markeng.fr.world.socgen/mapping/sales/" + entry.sales + tradeDate,
+			dataType: 'json',
+			success: function(result){
+				console.log(result);
+				if(typeof result == "object"){
+					for (var key in result.desk){
+						entry[key] = result.desk[key];
+					}
+				}
+				else{
+					entry.desk = 'undefined';
+					entry.country = 'undefined';
+					entry.zone = 'undefined';
+				}
+			},
+			error: function(error, text){
+				console.log(error);
+				console.log(error.responseText);
+				entry.desk = 'undefined';
+				entry.country = 'undefined';
+				entry.zone = 'undefined';
+			},
+			complete: function(){
+				thisR.pendingGeo -= 1;
+				if(thisR.pendingGeo <= 0){
+					thisR.handsontableHandler.render();
+					if(!thisR.all){
+						setTimeout(function() { thisR.handsontableHandler.validateCells(function(){}); }, Math.max(thisR.data.length, 100));
+					}
 					setTimeout(function() { thisR.handsontableHandler.render(); }, Math.max(2*thisR.data.length, 200));
 				}
 			}
@@ -140,14 +197,22 @@ Report.prototype.initialize = function(){
 	$('.data-report-name').html(thisR.type.name.toLowerCase());
 
 	// Cameleon mode
-	if(typeof thisR.userOptions.teamWrite == "object" && thisR.userOptions.teamWrite.length > 0){
-		thisR.userOptions.teamWrite.sort();
-		thisR.userOptions.teamWrite.forEach(function(user){
+	if((typeof thisR.user.teamWrite == "object" && thisR.user.teamWrite.length > 0) || (typeof thisR.user.teamRead == "object" && thisR.user.teamRead.length > 0)){
+		var list = [];
+		if(typeof thisR.user.teamWrite == "object" && thisR.user.teamWrite.length > 0){
+			list = list.concat(thisR.user.teamWrite);
+		}
+		if(typeof thisR.user.teamRead == "object" && thisR.user.teamRead.length > 0){
+			list = list.concat(thisR.user.teamRead);
+		}
+		list = uniq(list);
+		list.sort();
+		list.forEach(function(user){
 			$("#cmd-cameleon select").append($('<option></option>').attr('value',user).text(user));
 		});
 		$("#cmd-cameleon select").prop("selectedIndex", -1);
 		if(typeof thisR.cameleon == "string"){
-			$("#cmd-cameleon select").prop("selectedIndex", thisR.userOptions.teamWrite.indexOf(thisR.cameleon));
+			$("#cmd-cameleon select").prop("selectedIndex", list.indexOf(thisR.cameleon));
 		}
 		$("#cmd-cameleon select").change(function(){
 			post(".", {cameleon: $("#cmd-cameleon select").val()});
@@ -250,7 +315,7 @@ Report.prototype.initialize = function(){
 	var business_dropdown = business_short.concat(thisR.columnsMap.business.source);
 
 	// Show all
-	if(typeof thisR.userOptions.access == "object" && (thisR.userOptions.access.indexOf("ADMIN") >= 0 || thisR.userOptions.access.indexOf("SUPERUSER") >= 0)){
+	if(typeof thisR.userOptions.access == "object" && (thisR.userOptions.access.indexOf("ADMIN") >= 0 || thisR.userOptions.access.indexOf("SUPERVIEWER") >= 0)){
 		if(thisR.all){
 			$($('#cmd-show-all button')[0]).attr('class', 'btn btn-warning btn-sm');
 			$($('#cmd-show-all button')[1]).attr('class', 'btn btn-warning dropdown-toggle btn-sm');
@@ -338,7 +403,6 @@ Report.prototype.initialize = function(){
 					for(i = Math.min(selected[0], selected[2]); i < Math.max(selected[0], selected[2]) + 1; i++) {
 						thisR.importSpark(i);
 					}
-					thisR.pendingSpark += Math.max(selected[0], selected[2]) - Math.min(selected[0], selected[2]) + 1;
 				}
 			}
 		},
@@ -384,6 +448,11 @@ Report.prototype.initialize = function(){
 						if(column_code == "netMarginEur"){
 							entry_data.netMarginPct = (parseFloat(entry_data.netMarginEur) || 0) / (parseFloat(entry_data.nominalEur) || 0);
 							modified = true;
+							entry_data.modified = true;
+						}
+						// Sales (for geographic fields: desk, country, zone)
+						if(column_code == "sales" && entry_data.sales != ""){
+							thisR.importGeo(entry[0]);
 							entry_data.modified = true;
 						}
 					});

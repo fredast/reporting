@@ -19,6 +19,11 @@ Dashboard.filterFunctions = {
 		return function(entry) {
 			return (typeof entry.business == "string" ? entry.business.split(" ")[0] == argValue : false);
 		};
+	},
+	"pricer": function(argValue) {
+		return function(entry) {
+			return entry && (entry.pricer == argValue || entry.pricer2 == argValue || entry.pricer3 == argValue);
+		};
 	}
 };
 
@@ -38,6 +43,7 @@ Dashboard.prototype.load = function(){
 		success: function(result){
 			thisD.data = result.data;
 			thisD.argList = result.argList;
+			thisD.user = result.user;
 			thisD.userOptions = result.userOptions;
 			thisD.reportTypeList = result.reportTypeList;
 
@@ -59,26 +65,40 @@ Dashboard.prototype.load = function(){
 Dashboard.prototype.initialize = function(){
 	var thisD = this;
 
+
+	var canAccess = function(dash, argValue) {
+		if(!dash.accessType) {
+			return true;
+		}
+		else if (typeof dash.access != 'object' || !dash.access.length) {
+			return false;
+		}
+
+		var accessType,
+				access;
+		for(var i = 0; i < dash.accessType.length; i++) {
+			accessType = dash.accessType[i];
+
+			for(var j = 0; j < dash.access.length; j++) {
+				access = argValue ? dash.access[j].replace('[' + dash.arg + ']', argValue) : dash.access[j];
+				if(thisD.user[accessType] && thisD.user[accessType].indexOf(access) > -1) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	};
+
 	// Typeahead search bar
 	thisD.searchTypeahead = [];
 	thisD.dashdispList = [];
 	thisD.data.forEach(function(dash){
+
+
 		if(dash.arg == 'none'){
 			// Access
-			if(typeof dash.access == 'object' && dash.access.length != 0){
-				canAccess = dash.access.some(function(groupDash){
-					if(typeof thisD.userOptions.access == 'object' && thisD.userOptions.access.length != 0){
-						return thisD.userOptions.access.some(function(groupUser){return groupUser == groupDash});
-					}
-					else{
-						return false;
-					}
-				});
-			}
-			else{
-				canAccess = true;
-			}
-			if(canAccess){
+			if(canAccess(dash)){
 				thisD.searchTypeahead.push(dash.name);
 				thisD.dashdispList.push({name: dash.name, dash: dash});
 			}
@@ -89,31 +109,21 @@ Dashboard.prototype.initialize = function(){
 			argObj.listData.forEach(function(argValue){
 				var name = dash.name.replace('[' + argObj.code + ']', argValue);
 				// Access
-				if(typeof dash.access == 'object' && dash.access.length != 0){
-					canAccess = dash.access.some(function(groupDash){
-						groupDashBis = groupDash.replace('[' + argObj.code + ']', argValue);
-						if(typeof thisD.userOptions.access == 'object' && thisD.userOptions.access.length != 0){
-							return thisD.userOptions.access.some(function(groupUser){return groupUser == groupDashBis});
-						}
-						else{
-							return false;
-						}
-					});
-				}
-				else{
-					canAccess = true;
-				}
-				if(canAccess){
+				if(canAccess(dash, argValue)){
 					thisD.searchTypeahead.push(name);
 					thisD.dashdispList.push({name: name, dash: dash, argObj: argObj, argValue: argValue});
 				}
 			});
 		}
 	});
+	
+	thisD.searchTypeahead.sort();
+	
 	$('#dash-search-box').typeahead({
 		source: thisD.searchTypeahead,
 		minLength: 0,
 		autoSelect: false,
+		items: 'all',
 		updater: function(item){
 			thisD.displayDashdispFromName(item);
 			$('#dash-search-box').val('').blur();
@@ -209,7 +219,11 @@ Dashboard.prototype.displayDashdisp = function(dashdisp){
 	};
 
 	// Activate the tab
-	$('#dash-tabs-bar li').filter(function(index, element){ return $(element).find('.dash-tab-name').text() == dashdisp.name; }).attr('class', 'active');
+	$('#dash-tabs-bar li').filter(
+		function(index, element){
+			return $(element).find('.dash-tab-name').text() == dashdisp.name;
+		})
+		.attr('class', 'active');
 
 	var bodyWidth = $('body').width();
 

@@ -38,7 +38,6 @@ define( 'REPORT_MAX_HISTORY', 5 );
 # Widgets list
 $widget_include = '<script src="' . APPURL . APPINC . 'js/widgets.js?rand=' . time() . '"></script>' . PHP_EOL;
 $widget_include .= '<script src="' . APPURL . APPINC . 'js/widgets/widget-report-number.js?rand=' . time() . '"></script>' . PHP_EOL;
-$widget_include .= '<script src="' . APPURL . APPINC . 'js/widgets/widget-report-table.js?rand=' . time() . '"></script>' . PHP_EOL;
 $widget_include .= '<script src="' . APPURL . APPINC . 'js/widgets/widget-report-datatable.js?rand=' . time() . '"></script>' . PHP_EOL;
 $widget_include .= '<script src="' . APPURL . APPINC . 'js/widgets/widget-report-chart.js?rand=' . time() . '"></script>' . PHP_EOL;
 $widget_include .= '<script src="' . APPURL . APPINC . 'js/widgets/widget-report-filter.js?rand=' . time() . '"></script>' . PHP_EOL;

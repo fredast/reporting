@@ -219,7 +219,10 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 	container.empty();
 	$('#dash-modal-settings-after-body').empty();
 	// Argument selection
-	container.html('<h4>Argument</h4><select class="form-control" id="dash-in-argument"><option value="none">No argument (unique dashboard)</option></select>');
+	container.html('<h4>Argument</h4>\
+    <select class="form-control" id="dash-in-argument">\
+      <option value="none">No argument (unique dashboard)</option>\
+    </select>');
 	thisDA.argList.forEach(function(arg){
 		$('#dash-in-argument').append($('<option></option>').attr('value', arg.code).text(arg.name));
 	});
@@ -242,6 +245,17 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 		var placeholder = $('#dash-in-access').tagsinput('items').length > 0 ? '' : 'Add groups...';
 		$('#dash-in-access input').attr({'placeholder':placeholder});
 	});
+
+  // Access type
+  container.append('<h4>Access Type</h4>');
+
+  var accessTypes = [ 'access', 'teamRead', 'teamWrite' ];
+  for(var i = 0; i < accessTypes.length; i++) {
+    container.append('<label class="checkbox-inline">\
+        <input type="checkbox" name="dash-in-access-type" value="' + accessTypes[i] + '"> ' + accessTypes[i] + '\
+      </label>');
+  }
+
 	// Dynamic
 	$('#dash-in-argument').off().change(function(){
 		if($('#dash-in-argument').val() == 'none'){
@@ -282,7 +296,7 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 		$('#dash-in-argument').val(dash.arg).trigger('change');
 		$('#dash-in-name').val(dash.name).trigger('change');
 		$('#dash-in-id').val(dash.id).trigger('change');
-		dash.access.forEach(function(tag){
+    dash.access && dash.access.forEach(function(tag){
 			$('#dash-in-access').tagsinput('add', tag);
 		});
 		// Delete possibility
@@ -291,6 +305,11 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 			thisDA.deleteDash(dash);
 			$('#dash-modal-settings').modal('hide');
 		});
+    $( 'input[name=dash-in-access-type]' ).each(function() {
+      if(dash.accessType && dash.accessType.indexOf(this.value) > -1) {
+        this.checked = true;
+      }
+    })
 	}
 
 	// Show modal
@@ -322,6 +341,11 @@ dashboardAdmin.prototype.editSettings = function(){
 	}
 	if( typeof thisDA.current.access !== 'object' || !(thisDA.current.access.equals($('#dash-in-access').tagsinput('items'))) ){
 		thisDA.current.access = $('#dash-in-access').tagsinput('items').slice();
+		thisDA.current.modified = true;
+	}
+  var newAccessType = $( 'input[name=dash-in-access-type]:checked' ).map(function() { return $(this).val(); }).get() || [];
+	if( thisDA.current.accessType != $('#dash-in-id').val() ){
+		thisDA.current.accessType = newAccessType;
 		thisDA.current.modified = true;
 	}
 };

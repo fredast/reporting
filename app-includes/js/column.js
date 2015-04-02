@@ -46,7 +46,7 @@ Object.defineProperties(Column.prototype,
         return this.typeValue(val).format(customFormat || this.dateFormat);
       }
       else {
-        return val;
+        return val || '';
       }
     }
   },
@@ -60,7 +60,7 @@ Object.defineProperties(Column.prototype,
         return moment(val, ["YYYY-MM-DD", "x"]);
       }
       else {
-        return val;
+        return val || '';
       }
     }
   },

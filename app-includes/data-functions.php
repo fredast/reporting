@@ -34,7 +34,7 @@ function get_data(){
 			userOptions_save();
 		}
 	}
-	
+
 	app_die();
 }
 
@@ -46,12 +46,12 @@ function get_data(){
 
 function da_save(){
 	global $appdb, $user_options;
-	
+
 	// Check if the user is admin
 	if(!isset($user_options['json_private']->access) or array_search('ADMIN', $user_options['json_private']->access) == false){
 		die();
 	}
-	
+
 	if(isset($_POST['data'])){
 		$data = $_POST['data'];
 	}
@@ -59,7 +59,7 @@ function da_save(){
 		echo 'No data!';
 		die();
 	}
-	
+
 	foreach($data as &$entry){
 		// New entry
 		if(!isset($entry['dbId'])){
@@ -69,13 +69,13 @@ function da_save(){
 		// Update entry
 		unset($entry['modified']);
 		$appdb->query_void('UPDATE ' . TABLE_DA_DATA . ' SET json = ? WHERE id = ?', array(json_encode($entry), $entry['dbId']));
-				
+
 		// Delete entry
 		if(isset($entry['deleted']) and $entry['deleted']){
 			$appdb->query_void('DELETE FROM ' . TABLE_DA_DATA . ' WHERE id = ?', array($entry['dbId']));
 		}
 	}
-	
+
 	echo 'Success!';
 	app_die();
 }
@@ -104,7 +104,7 @@ function da_load(){
 		$type_list[] = json_decode($type['json']);
 	}
 	//Return the data
-	$result = array('data' => $data, 'argList' => $arg_list, 'miscParam' => $misc_param, 'userOptions' => $user_options['json_public'], 'reportTypeList' => $type_list);
+	$result = array('data' => $data, 'argList' => $arg_list, 'miscParam' => $misc_param, 'user' => $user_options['json_private'], 'userOptions' => $user_options['json_public'], 'reportTypeList' => $type_list);
 	echo json_encode($result);
 	app_die();
 }
@@ -138,7 +138,13 @@ function report_load(){
 		die();
 	}
 
-	
+	# SUPERADMIN
+	$superadmin = false;
+	if(isset($user_options['json_private']->access) and array_search('SUPERADMIN', $user_options['json_private']->access)){
+		$superadmin = true;
+	}
+
+
 	// Get the data type
 	$req = $appdb->query_first('SELECT * FROM ' . TABLE_REPORT_TYPE . ' WHERE code = ?', array($_POST['dataType']));
 	if($req == false){
@@ -178,7 +184,7 @@ function report_load(){
 		// $req = $appdb->query_all('SELECT * FROM ' . TABLE_REPORT_DATA . ' WHERE type = ? AND user = ? AND deleted = 0', array($data_type->code, $login));
 		$req = $appdb->query_all('SELECT * FROM ' . TABLE_REPORT_DATA . ' WHERE type = ? AND deleted = 0', array($data_type->code));
 	}
-	
+
 	//Get the last historical entry
 	$data = array();
 	foreach($req as &$entry){
@@ -190,7 +196,7 @@ function report_load(){
 			$add = $entry['user'] == $as_login || (isset($last_entry->pricer) && $last_entry->pricer == $as_login) || (isset($last_entry->pricer2) && $last_entry->pricer2 == $as_login);
 		}
 		if(!$all && !$add && $team){
-			if($read){				
+			if($read){
 				$add = $add || (isset($last_entry->pricer) && (array_search($last_entry->pricer, $teamRead) !== false));
 				$add = $add || (isset($last_entry->pricer2) && (array_search($last_entry->pricer2, $teamRead) !== false));
 			}
@@ -199,17 +205,23 @@ function report_load(){
 				$add = $add || (isset($last_entry->pricer2) && (array_search($last_entry->pricer2, $teamWrite) !== false));
 			}
 		}
+		// Secret
+		if(isset($last_entry->secret) && ($last_entry->secret === "true" || $last_entry->secret === true) && $login !== $entry['user']){
+			if(!$superadmin){
+				$add = false;
+			}
+		}
 		// No longer check if the user can access
 		if($add){
 			$data[] = $last_entry;
 		}
 	}
-	
+
 	//Return the data
 	if($login=='spark_script')
 		$result = array('dataType' => $data_type, 'data' => $data);
 	else
-		$result = array('dataType' => $data_type, 'data' => $data, 'userOptions' => $user_options['json_public']);
+		$result = array('dataType' => $data_type, 'data' => $data, 'user' => $user_options['json_private'], 'userOptions' => $user_options['json_public']);
 	echo json_encode($result);
 }
 
@@ -234,7 +246,7 @@ function report_save(){
 	else{
 		$as_login = $login;
 	}
-	
+
 	//Get access data
 	if(isset($user_options['json_private']->access)){
 		$is_access = true;
@@ -251,7 +263,7 @@ function report_save(){
 		$write = false;
 	}
 
-	
+
 	foreach($data as &$entry){
 		// New entry
 		if(!isset($entry['dbId']) || $entry['dbId'] == "null" || $entry['dbId'] == null){
@@ -276,12 +288,12 @@ function report_save(){
 		$entry['updatedUser'] = $login;
 		$entry['updatedTime'] = time();
 		unset($entry['modified']);
-		
+
 		// Check if the user can edit
 		$allowed = ($req["user"] == $login) || ($last_entry->pricer == $login) || ($last_entry->pricer2 == $login);
 		if(!$allowed){
 			if($is_access){
-				$allowed = $allowed || (array_search("ADMIN", $access) !== false) || (array_search("SUPERUSER", $access) !== false);
+				$allowed = $allowed || (array_search("ADMIN", $access) !== false) || (array_search("SUPERVIEWER", $access) !== false);
 			}
 			if($write){
 				$allowed = $allowed || (isset($last_entry->pricer) && (array_search($last_entry->pricer, $teamWrite) !== false));
@@ -298,7 +310,7 @@ function report_save(){
 			}
 		}
 	}
-	
+
 	echo 'Done!';
 }
 
@@ -318,18 +330,18 @@ function save_data_spark(){
 		echo 'No data!';
 		die();
 	}
-	
+
 	// Query the database
 	$deals_code = 'deals';
 	$req = $appdb->query_all('SELECT * FROM ' . TABLE_REPORT_DATA . ' WHERE type = ? AND deleted = 0', array($deals_code));
-	
+
 	// Check if already exist and had been modified by a user
 	$edit = false;
 	foreach($req as &$entry){
 		//Get the last historical entry
 		$histo = json_decode($entry['json']);
 		$last_entry = end($histo);
-		
+
 		if(property_exists($last_entry,'ref') && $last_entry->ref == $ref){
 			if($last_entry->updatedUser == 'spark_script'){
 				$edit = true;
@@ -340,7 +352,7 @@ function save_data_spark(){
 			die();
 		}
 	}
-	
+
 	// Add to the database
 	if(!$edit){
 		$appdb->query_void('INSERT INTO ' . TABLE_REPORT_DATA . ' (json, user, type) VALUES (?, ?, ?)', array(json_encode(array()), $data['user'], $deals_code));
@@ -369,8 +381,8 @@ function userOptions_save(){
 		echo 'No data!';
 		die();
 	}
-	
+
 	user_save_public_options($data);
-	
+
 	echo 'Options saved!';
 }
