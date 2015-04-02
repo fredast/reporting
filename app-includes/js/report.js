@@ -103,6 +103,7 @@ Report.prototype.importSpark = function(row){
 							entry[key] = result[key];
 						}
 						entry.import = 'done';
+						entry.modified = true;
 					}
 					else{
 						entry.import = 'error';

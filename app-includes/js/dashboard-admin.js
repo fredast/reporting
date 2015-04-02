@@ -24,6 +24,7 @@ Array.prototype.equals = function (array) {
     return true;
 };
 
+
 var dashboardAdmin = function(urlData){
 	this.urlData = urlData;
 	this.data = [];
@@ -36,6 +37,16 @@ var dashboardAdmin = function(urlData){
 		// Initialize
 		thisDA.load();
 	});
+
+
+
+
+  window.onbeforeunload = function() {
+    var modifiedData = thisDA.data.filter(function(dash){ return dash.modified; });
+    if(modifiedData.length > 0) {
+      return "There are unsaved changes in the current dashboard.";
+    }
+  }
 };
 
 /*
@@ -75,11 +86,13 @@ dashboardAdmin.prototype.save = function(){
 		url: thisDA.urlData,
 		data: {type: 'dashboard', request: 'save', data: modifiedData},
 		success: function(result){
-			console.log(result);
 			$('#dash-cmd-save').button('reset');
-			// Save the current dash id
-			sessionStorage.setItem('currentDash', (typeof thisDA.current == 'object' ? thisDA.current.id : undefined));
-			location.reload();
+
+      thisDA.load();
+
+      $('#dash-cmd-new')
+        .add('#dash-cmd-select')
+        .removeAttr('disabled');
 		}
 	});
 	return true;
@@ -89,13 +102,10 @@ dashboardAdmin.prototype.initialize = function(){
 	var thisDA = this;
 	// Dashboard list
 	thisDA.updateDashList();
-
-	// Check if current dash was saved
-	currentId = sessionStorage.getItem('currentDash');
-	sessionStorage.removeItem('currentDash');
-	thisDA.current = thisDA.data.filter(function(dash){return dash.id == currentId; })[0];
 	if(typeof thisDA.current == 'object'){
-		$('#dash-cmd-select').val(thisDA.current.id);
+    if(thisDA.current.dbId) {
+	    $('#dash-cmd-select').val(thisDA.current.dbId);
+    }
 		thisDA.showDash();
 	}
 
@@ -135,7 +145,7 @@ dashboardAdmin.prototype.initialize = function(){
 	});
 
 	$('#dash-cmd-select').off().change(function(){
-		thisDA.current = thisDA.data.filter(function(dash){return dash.id == $('#dash-cmd-select').val(); })[0];
+		thisDA.current = thisDA.data.filter(function(dash){return dash.dbId == $('#dash-cmd-select').val(); })[0];
 		if(typeof thisDA.current == 'object'){
 			thisDA.showDash();
 		}
@@ -148,7 +158,7 @@ dashboardAdmin.prototype.updateDashList = function(){
 	$('#dash-cmd-select').append('<option disabled selected value="">Edit a Dashboard</option>');
 	thisDA.data.forEach(function(dash){
 		if(!(dash.deleted)){
-			$('#dash-cmd-select').append($('<option></option>').attr('value', dash.id).attr('selected', dash == thisDA.current).text(dash.name));
+			$('#dash-cmd-select').append($('<option></option>').attr('value', dash.dbId).attr('selected', dash == thisDA.current).text(dash.name));
 		}
 	});
 };
@@ -229,8 +239,6 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 	$('#dash-in-argument').prop("selectedIndex", -1);
 	// Name selection
 	container.append('<hr><h4>Name</h4><p id="dash-help-name" style="display:none"></p><input type="text" class="form-control" id="dash-in-name" placeholder="Name">');
-	// Id selection
-	container.append('<h4>Id</h4><input type="text" class="form-control" id="dash-in-id" placeholder="Id">');
 	// Access
 	container.append('<h4>Access</h4><p id="dash-help-access" style="display:none"></p><select multiple id="dash-in-access"></select>');
 	$('#dash-in-access').tagsinput({
@@ -280,6 +288,10 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 				thisDA.data.push(newDash);
 				thisDA.current = newDash;
 				thisDA.showDash();
+
+        $('#dash-cmd-new')
+          .add('#dash-cmd-select')
+          .attr('disabled', 'disabled');
 			}
 			thisDA.editSettings();
 			thisDA.updateDashList();
@@ -295,7 +307,6 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 	if(edit){
 		$('#dash-in-argument').val(dash.arg).trigger('change');
 		$('#dash-in-name').val(dash.name).trigger('change');
-		$('#dash-in-id').val(dash.id).trigger('change');
     dash.access && dash.access.forEach(function(tag){
 			$('#dash-in-access').tagsinput('add', tag);
 		});
@@ -319,7 +330,6 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
 function canSaveSettings(){
 	if(!($('#dash-in-argument').val())){ return 'You must specify an argument.'; }
 	if(!($('#dash-in-name').val().length > 0)){ return 'You must specify a name.'; }
-	if(!($('#dash-in-id').val().length > 0)){ return 'You must specify an id.'; }
 	// Check also if the id already exist
 	//if(!($('#dash-in-access').tagsinput('items').length > 0)){ return 'You must specify at least a group for access.'; }
 	return true;
@@ -333,10 +343,6 @@ dashboardAdmin.prototype.editSettings = function(){
 	}
 	if( thisDA.current.name != $('#dash-in-name').val() ){
 		thisDA.current.name = $('#dash-in-name').val();
-		thisDA.current.modified = true;
-	}
-	if( thisDA.current.id != $('#dash-in-id').val() ){
-		thisDA.current.id = $('#dash-in-id').val();
 		thisDA.current.modified = true;
 	}
 	if( typeof thisDA.current.access !== 'object' || !(thisDA.current.access.equals($('#dash-in-access').tagsinput('items'))) ){

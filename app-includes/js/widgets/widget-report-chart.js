@@ -4,6 +4,8 @@ var widgetParams = {name: "Report Chart", id:"reportChart", maximizable : true};
 widgetry.list.push(widgetParams);
 widgetry[widgetParams.id] = widgetParams;
 
+var UNAMED_SERIE = 'unamed';
+
 widgetry.reportChart.displaySettings = function(widget){
 	var edit = typeof widget !== 'undefined';
 	var container = $('#dash-modal-settings-body');
@@ -86,6 +88,7 @@ widgetry.reportChart.displaySettings = function(widget){
 		container.append('<label for="dash-wg-in-aggregation">Aggregation function</label>');
 		$('<select class="form-control" name="dash-wg-in-aggregation" id="dash-wg-in-aggregation">\
 				<option value="count">Count</option>\
+				<option value="countU">Count unique</option>\
 				<option value="sum">Sum</option>\
 				<option value="avg">Average</option>\
 			</select>')
@@ -93,7 +96,7 @@ widgetry.reportChart.displaySettings = function(widget){
 
 		container.append('<label for="dash-wg-in-series">Series</label>');
 		$('<select class="form-control" id="dash-wg-in-series">\
-				<option value="no-serie">(none)</option>\
+				<option value="' + UNAMED_SERIE + '">(none)</option>\
 			</select>')
 			.append(buildOptionsForColumns(reportType))
 			.appendTo(container);
@@ -150,7 +153,7 @@ widgetry.reportChart.showWidget = function(widget, element){
 		.append('<dt>Axes</dt>')
 		.append('<dd>' + widget.xaxis + " / " + widget.yaxis + '</dd>');
 
-	if(widget.series != 'no-serie') {
+	if(widget.series != UNAMED_SERIE) {
 		container
 			.append('<dt>Series</dt>')
 			.append('<dd>' + widget.series + '</dd>');
@@ -184,6 +187,10 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 	var setY = {
 		"count" : function(obj, indexedElement) {
 			obj.y = indexedElement.count;
+		},
+		"countU" : function(obj, indexedElement) {
+			var uniqueValues = indexedElement.allValues.filter(function(v, i, arr) { return i == arr.indexOf(v)});
+			obj.y = uniqueValues.length;
 		},
 		"sum" : function(obj, indexedElement) {
 			obj.y = indexedElement.sum;
@@ -221,8 +228,16 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 		}
 	};
 
+
+	Highcharts.setOptions({
+					global: {
+							useUTC: false
+					}
+			});
+
 	// Chart definition (minus the data)
 	var highchartsData = {
+		useUTC: false,
 		chart: {
 			zoomType: maximized ? "x" : undefined,
 			panning: maximized,
@@ -243,7 +258,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 			enabled: false
 		},
 		legend: {
-			enabled: maximized && widget.series != 'no-serie'
+			enabled: maximized && widget.series != UNAMED_SERIE
 		},
 		xAxis: {
 			type: axisTypeMapping[xColumn.type] || "category",
@@ -259,6 +274,8 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 			type: axisTypeMapping[yColumn.type],
       reversedStacks: false,
 			title: "",
+			minPadding: 0,
+			maxPadding: 0,
 			labels: {
 				formatter: formatter(yColumn, widget.yaxisFormat),
 				style: {
@@ -269,18 +286,16 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 		tooltip: {
 			enabled: maximized ? true : false,
 			useHTML: true,
-			headerFormat: '<table><tr><th colspan="3" style="font-weight: bold">{point.key}</th></tr>',
+			headerFormat: '<table><tr><th colspan="3" style="font-weight: bold">{point.key}</th><th></th></tr>',
 			pointFormatter: function() {
 				var y = formatter(yColumn, widget.yaxisFormat).apply(this),
 						color = this.color;
 						name = this.series.name;
 
 				var row = '<tr>\
-					<td>' + ((widget.series == 'no-serie' && name == 'no-serie') ? '' : name) + '</td>\
-					<td> <span style="font-weight: bold; color: ' + color + '">' + y + '</span> \
-						<span style="font-size: 10px">' +
-							(this.percentage ? numeraljs(this.percentage / 100).format('0[.]00%') : '') + '</span>\
-					</td>\
+					<td>' + ((widget.series == UNAMED_SERIE && name == UNAMED_SERIE) ? '' : name) + ' </td>\
+					<td style="font-weight: bold; color: ' + color + '; padding-left: 6px; text-align: right;"> ' + y + ' </td> \
+					<td style="font-size: 10px; text-align: right; vertical-align: bottom; padding-left: 6px;"> ' + (this.percentage ? numeraljs(this.percentage / 100).format('0[.]00%') : '') + '</td>\
 				</tr>';
 				return row;
 			},
@@ -395,7 +410,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 							row.append(
 								$('<th></th>')
 									.addClass('type-' + (i ? yType : xType))
-									.text(header == 'no-serie' ? 'Value' : header)
+									.text(header == UNAMED_SERIE ? 'Value' : header)
 							);
 						});
 						thead.append(row);
@@ -413,7 +428,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 									$('<td></td>')
 										.attr('data-order', val)
 										.addClass('type-' + (j ? yType : xType))
-										.text(formattedVal)
+										.html(formattedVal)
 								);
 							}
 
@@ -493,7 +508,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 
 			reportData.forEach(function(reportRow) {
 				var x, y, serie;
-				serie = currentSerie && reportRow[currentSerie] || "no-serie";
+				serie = currentSerie && reportRow[currentSerie] || UNAMED_SERIE;
 				x = reportRow[widget.xaxis];
 				y = reportRow[widget.yaxis];
 
@@ -508,7 +523,8 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 				if(indexedData[serie][x] === undefined) {
 					indexedData[serie][x] = {
 						sum: 0,
-						count: 0
+						count: 0,
+						allValues: []
 					};
 				}
 
@@ -518,6 +534,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 
 				indexedData[serie][x].sum += parseFloat(y) || 0;
 				indexedData[serie][x].count += 1;
+				indexedData[serie][x].allValues.push(y);
 			});
 
 			var seriesData = [];

@@ -41,6 +41,7 @@ function page_header($page_title = APP_NAME, $additional_head = "") {
 	# Includes
 	$header .= '<meta name="viewport" content="width=device-width, initial-scale=1">' . PHP_EOL;
 	$header .= '<meta name="apple-mobile-web-app-capable" content="yes">' . PHP_EOL;
+	$header .= '<link rel="shortcut icon" href="' . APPURL . APPINC . 'img/favicon.png">' . PHP_EOL;
 	// jQuery
 	$header .= '<script src="' . APPURL . APPINC . 'js/jquery-1.11.1.min.js"></script>' . PHP_EOL;
 	//$header .= '<script src="' . APPURL . APPINC . 'js/jquery-ui.min.js"></script>' . PHP_EOL;

@@ -161,7 +161,7 @@ var widgetry = {
     $("#maximized-widget").on('hidden.bs.modal', function(event) {
       var modal = $(this);
       var widget = modal.data('widget');
-      typeof widgetry[type].destroyWidget == 'function' &&
+      typeof widgetry[widget.type].destroyWidget == 'function' &&
         widgetry[widget.type].destroyWidget(widget, dashdisp, $('.modal-body', modal), true);
     });
   },
