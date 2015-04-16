@@ -316,7 +316,7 @@ Report.prototype.initialize = function(){
 	var business_dropdown = business_short.concat(thisR.columnsMap.business.source);
 
 	// Show all
-	if(typeof thisR.userOptions.access == "object" && (thisR.userOptions.access.indexOf("ADMIN") >= 0 || thisR.userOptions.access.indexOf("SUPERVIEWER") >= 0)){
+	if(typeof thisR.user.access == "object" && (thisR.user.access.indexOf("ADMIN") >= 0 || thisR.user.access.indexOf("SUPERADMIN") >= 0 || thisR.user.access.indexOf("SUPERVIEWER") >= 0)){
 		if(thisR.all){
 			$($('#cmd-show-all button')[0]).attr('class', 'btn btn-warning btn-sm');
 			$($('#cmd-show-all button')[1]).attr('class', 'btn btn-warning dropdown-toggle btn-sm');
@@ -448,8 +448,10 @@ Report.prototype.initialize = function(){
 							var strikedate = moment(entry_data.strikeDate, "YYYY-MM-DD"),
 								matdate = moment(entry_data.matDate, "YYYY-MM-DD"),
 								yearstart = moment("2014-12-31", "YYYY-MM-DD"),
+								yearend = moment("2015-12-31", "YYYY-MM-DD"),
 								startperiod = strikedate.diff(yearstart, "days", true) > 0 ? strikedate: yearstart,
-								T_in_days = matdate.diff(startperiod, "days", true);
+								endperiod = yearend.diff(matdate, "days", true) > 0 ? matdate: yearend,
+								T_in_days = endperiod.diff(startperiod, "days", true);
 							entry_data.marginRunningEur = (parseFloat(entry_data.marginRunningPct) || 0) * (parseFloat(entry_data.nominalEur) || 0) * T_in_days/365;
 							modified = true;
 							entry_data.modified = true;
