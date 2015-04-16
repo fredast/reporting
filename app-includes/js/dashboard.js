@@ -81,7 +81,7 @@ Dashboard.prototype.initialize = function(){
 
 			for(var j = 0; j < dash.access.length; j++) {
 				access = argValue ? dash.access[j].replace('[' + dash.arg + ']', argValue) : dash.access[j];
-				if(thisD.user[accessType] && thisD.user[accessType].indexOf(access) > -1) {
+				if(thisD.user[accessType] && (thisD.user[accessType] == access || thisD.user[accessType].indexOf(access) > -1)) {
 					return true;
 				}
 			}
@@ -116,9 +116,9 @@ Dashboard.prototype.initialize = function(){
 			});
 		}
 	});
-	
+
 	thisD.searchTypeahead.sort();
-	
+
 	$('#dash-search-box').typeahead({
 		source: thisD.searchTypeahead,
 		minLength: 0,

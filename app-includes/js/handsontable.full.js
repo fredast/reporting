@@ -6877,10 +6877,10 @@ Handsontable.helper.pageY = function (event) {
     /* Hook by Frederic Aoustin
    * To avoid "bad value" alert when the object property corresponding to the chechbox is empty
    */
-    else { 
+    else {
       INPUT.className += ' noValue';
       TD.appendChild(INPUT);
-    } 
+    }
     // END of hook
 
     if (cellProperties.readOnly) {
@@ -11309,12 +11309,12 @@ function HandsontableColumnSorting() {
     /* MOD by Frederic Aoustin
    * Sort numbers correctly
    */
-   
+
   function numberSort(sortOrder) {
     return function (a, b) {
     var aNumber = parseFloat(a[1]) || 0;
     var bNumber = parseFloat(b[1]) || 0;
-  
+
       if (aNumber < bNumber) {
         return sortOrder ? -1 : 1;
       }
@@ -11324,7 +11324,7 @@ function HandsontableColumnSorting() {
       return 0;
     };
   }
-  
+
   /* END of Mod
    */
 
@@ -11344,8 +11344,8 @@ function HandsontableColumnSorting() {
      * Sort dates correctly
      * Needs Moment.js
      */
-    var aDate = moment(a[1], "DD/MM/YYYY");
-    var bDate = moment(b[1], "DD/MM/YYYY");
+    var aDate = moment(a[1], "YYYY-MM-DD");
+    var bDate = moment(b[1], "YYYY-MM-DD");
     /* END of Mod
      * Old code
       var aDate = new Date(a[1]);
@@ -19280,7 +19280,7 @@ WalkontableBorder.prototype.appear = function (corners) {
     if (toColumn === this.instance.getSetting('totalColumns') - 1) {
       var scrollableElement = Handsontable.Dom.getScrollableElement(instance.wtTable.TABLE),
         cornerOverlappingContainer = toTD.offsetLeft + Handsontable.Dom.outerWidth(toTD) >= Handsontable.Dom.innerWidth(scrollableElement);
-      
+
       if (cornerOverlappingContainer) {
         this.cornerStyle.left = Math.floor(left + width - 3 - parseInt(this.cornerDefaultStyle.width) / 2) + "px";
         this.cornerStyle.borderRightWidth = 0;
@@ -19760,7 +19760,7 @@ WalkontableColumnFilter.prototype.sourceColumnToVisibleRowHeadedColumn = functio
 
 /**
  * WalkontableColumnStrategy
- * 
+ *
  * @param containerSizeFn
  * @param sizeAtIndex
  * @param strategy - all, last, none

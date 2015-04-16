@@ -37,7 +37,7 @@ widgetry.reportNumber.displaySettings = function(widget){
 			var column = reportType.columns.filter(function(col){ return col.data == $('#dash-wg-in-column').val(); })[0];
 			// __Operation
 			container.append('<h5>Operation</h5><select class="form-control" id="dash-wg-in-operation"><option value="count">Count</option><option value="countU">Count unique</option></select>');
-			if(column.dataType == 'numeric'){
+			if(column.type == 'numeric' || column.type == 'checkbox'){
 				$('#dash-wg-in-operation').append('<option value="sum">Sum</option><option value="mean">Mean</option>');
 			}
 			$('#dash-wg-in-operation').prop("selectedIndex", -1);
@@ -78,8 +78,11 @@ widgetry.reportNumber.showWidget = function(widget, element){
 
 widgetry.reportNumber.displayWidget = function(widget, dashdisp, element){
 	var reportData, value;
-	
+
 	element.append('<p class="widget-number"><span class="widget-number-value"></span> <span class="widget-number-unit">' + widget.unit + '</span></p>');
+
+	var reportType = widgetry.thisD.reportTypeList.filter(function(obj){return obj.code == widget.reportType;})[0];
+	var column = reportType.columns.column(widget.column);
 
 	// Request data
 	dashdisp.datasource.registerStreamListener(
@@ -106,14 +109,18 @@ widgetry.reportNumber.displayWidget = function(widget, dashdisp, element){
 				value = Object.keys(count).length;
 				break;
 			case 'sum':
-				value = reportData.reduce(function(prev, entry){ return prev + (parseFloat(entry[widget.column]) || 0); }, 0);
+				value = reportData.reduce(function(prev, entry){
+						return prev + column.typeValue(entry[widget.column]).valueOf() || 0;
+					}, 0);
 				break;
 			case 'mean':
-				value = reportData.reduce(function(prev, entry){ return prev + (parseFloat(entry[widget.column]) || 0); }, 0) / reportData.length;
+				value = reportData.reduce(function(prev, entry){
+						return prev + column.typeValue(entry[widget.column]).valueOf() || 0; }
+					, 0) / reportData.length;
 				break;
 		}
 		// Display the value
-		var strValue = numeral(value).format(widget.numberFormat);
+		var strValue = numeraljs(value / (widget.divisor || 1.0)).format(widget.numberFormat);
 		$(".widget-number-value", element).text(strValue);
 	});
 };

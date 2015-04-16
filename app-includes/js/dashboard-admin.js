@@ -36,6 +36,7 @@ var dashboardAdmin = function(urlData){
 	$(document).ready(function () {
 		// Initialize
 		thisDA.load();
+		thisDA.load();
 	});
 
 
@@ -79,20 +80,27 @@ dashboardAdmin.prototype.load = function(){
 dashboardAdmin.prototype.save = function(){
 	var thisDA = this;
 	var modifiedData = thisDA.data.filter(function(dash){ return dash.modified; });
+
 	if(modifiedData.length == 0){ return true; }
-	$('#dash-cmd-save').button('loading');
+
+	$('#dash-cmd-save')
+    .attr('disabled', 'disabled')
+    .text('Saving…');
+
 	$.ajax({
 		type: "POST",
 		url: thisDA.urlData,
 		data: {type: 'dashboard', request: 'save', data: modifiedData},
 		success: function(result){
-			$('#dash-cmd-save').button('reset');
-
-      thisDA.load();
+    	$('#dash-cmd-save')
+        .removeAttr('disabled')
+        .text('Save');
 
       $('#dash-cmd-new')
         .add('#dash-cmd-select')
         .removeAttr('disabled');
+
+      thisDA.data.forEach(function(dash){ dash.modified = false; })
 		}
 	});
 	return true;
@@ -257,7 +265,7 @@ dashboardAdmin.prototype.showModalSettings = function(dash){
   // Access type
   container.append('<h4>Access Type</h4>');
 
-  var accessTypes = [ 'access', 'teamRead', 'teamWrite' ];
+  var accessTypes = [ 'access', 'teamRead', 'teamWrite', 'login' ];
   for(var i = 0; i < accessTypes.length; i++) {
     container.append('<label class="checkbox-inline">\
         <input type="checkbox" name="dash-in-access-type" value="' + accessTypes[i] + '"> ' + accessTypes[i] + '\

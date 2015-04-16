@@ -45,6 +45,9 @@ Object.defineProperties(Column.prototype,
       else if(this.type === "date") {
         return this.typeValue(val).format(customFormat || this.dateFormat);
       }
+      else if(this.type === "checkbox") {
+        return this.typeValue(val) ? "\u2713" : "\u2717";
+      }
       else {
         return val || '';
       }
@@ -58,6 +61,9 @@ Object.defineProperties(Column.prototype,
       }
       else if (this.type == "date") {
         return moment(val, ["YYYY-MM-DD", "x"]);
+      }
+      else if (this.type == "checkbox") {
+        return val == true || val == 'true';
       }
       else {
         return val || '';

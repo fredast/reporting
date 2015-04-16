@@ -52,20 +52,42 @@ var getAvailableColumns = function(reportListTypes) {
 	return columns;
 };
 
-var createTextFilter = function(title, field) {
+var createTextFilter = function(title, field, column) {
 	var formGroup = $('<div class="form-group">\
 		<label for="field-' + field + '" class="col-xs-3 control-label">' + title + '</label>\
 		<div class="col-xs-8">\
-			<input class="form-control input-sm" id="field-' + field + '" placeholder="Search Term 1, Search Term 2, &hellip;" />\
+			<input class="form-control input-sm" id="field-' + field + '" placeholder="Term 1, Term 2, &hellip;" />\
 		</div>\
 	</div>');
 
 	var input = $('.form-control', formGroup);
 
+	var tagInputsConf = {
+		tagClass: 'label label-default',
+		trimValue: true
+	};
+
+	if(column && column.type == "autocomplete") {
+		tagInputsConf.typeahead = {
+			displayText: function(item) { return item; },
+			source: column.source
+		};
+	}
+
+	input
+		.tagsinput(tagInputsConf);
+	input
+		.on('itemAdded', function() { try { input.keyup(); } catch (e) {} })
+		.on('itemRemoved', function() { try { input.keyup(); } catch (e) {} });
+
 	var filterCondition = function(value, searchTerms) {
 		return searchTerms.some(function(searchTerm) {
 			return searchTerm.test(value);
 		});
+	}
+
+	var escapeRegExp = function (str) {
+		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
 
 	var filterFunction = function(entry) {
@@ -80,7 +102,7 @@ var createTextFilter = function(title, field) {
 				splittedInput = inputVal.split(",");
 		for(var i in splittedInput) {
 			if(splittedInput[i].trim() != "") {
-				searchTerms.push(new RegExp(splittedInput[i].trim(), 'i'));
+				searchTerms.push(new RegExp(escapeRegExp(splittedInput[i].trim()), 'i'));
 			}
 		}
 
@@ -278,10 +300,8 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 	var titleWrapper = $('<form class="form-horizontal col-xs-10"></form>').append(quickSearch.formGroup);
 	titleWrapper.appendTo(heading);
 	quickSearch.inputs.keyup(refreshDataSource);
-	quickSearch.inputs.attr('tabindex', widget.id * 10 + 1);
 
 	var newFilter = $('<input class="form-control input-sm" placeholder="Enter field name" autocomplete="off"></input>');
-	newFilter.attr('tabindex', widget.id * 10 + 3);
 
 	var removeFilter = function(index) {
 		if(filters[index]) {
@@ -302,8 +322,8 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 		}
 	};
 
-	var addFilter = function(creationFunction, label, field) {
-		var filter = creationFunction.call(null, label, field);
+	var addFilter = function(creationFunction, label, field, column) {
+		var filter = creationFunction.call(null, label, field, column);
 		var newLength = filters.push(filter);
 
 		var deleteLink = $('<a href="#" class="col-xs-1 btn btn-link text-left">\
@@ -317,14 +337,14 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 
 		form.append(filter.formGroup);
 		filter.inputs
-			.keyup(refreshDataSource)
-			.attr('tabindex', widget.id * 10 + 2);
+			.keyup(refreshDataSource);
 
 		body.removeClass('hidden');
 
 		// Adds a tiny timeout or it will not work properly
 		setTimeout(function() {
 			filter.inputs.first().focus();
+			filter.inputs.tagsinput('focus');
 		}, 200);
 
 
@@ -354,20 +374,21 @@ widgetry.reportFilter.displayWidget = function(widget, dashdisp, element){
 			cb(matches);
 		},
 		afterSelect: function(column) {
-			newFilter.val(''); console.log(column)
-			var filter = addFilter(creationFunction[column.type] || createTextFilter, column.header, column.data);
+			newFilter.val('');
+			var filter = addFilter(creationFunction[column.type] || createTextFilter, column.header, column.data, column);
 		}
 	});
 	newFilter.click(function() {
 		$(this).typeahead("lookup");
 	});
 
+	element
+		.append(body);
+
 	// Desactivate submit on forms.
 	$('form', element)
 		.submit(function(e) {
+			e.preventDefault();
 			return false;
 		});
-
-	element
-		.append(body);
 };

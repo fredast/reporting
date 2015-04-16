@@ -239,12 +239,18 @@ widgetry.displayFilterSettings = function(container, reportType){
 	container.append(helper);
 };
 
-widgetry.filter = function(widget, entry){
+widgetry.filter = function(widget, entry, index, array){
 	// Get user login
 	var login = widgetry.thisD.userOptions.login;
 	// Evaluate the filter code
-	if(typeof widget.filter != "string" || widget.filter == ''){ return true; }
-	else{ var cond = eval(widget.filter); return (typeof cond == "boolean" ? cond : true); }
+	if(typeof widget.filter != "string" || widget.filter == '') {
+		return true;
+	}
+	else {
+		eval('var filterFunction = function (entry, index, array) {' + widget.filter + '}');
+		var cond = filterFunction(entry, index, array);
+		return (typeof cond == "boolean" ? cond : true);
+	}
 };
 
 // Generalities

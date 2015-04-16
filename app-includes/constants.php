@@ -59,16 +59,17 @@ define( 'INCLUDE_REPORT', $include_report );
 
 $include_dashboard_admin = '<link rel="stylesheet" media="screen" href="' . LIB . '/bootstrap-tagsinput-0.5.0/bootstrap-tagsinput.css">' . PHP_EOL;
 $include_dashboard_admin .= '<script src="' . LIB . '/bootstrap-tagsinput-0.5.0/bootstrap-tagsinput.min.js"></script>' . PHP_EOL;
-$include_dashboard_admin .= '<script src="' . LIB . '/bootstrap3-typeahead-3.1.0/bootstrap3-typeahead.min.js"></script>' . PHP_EOL;
+$include_dashboard_admin .= '<script src="' . LIB . '/bootstrap3-typeahead-3.1.1/bootstrap3-typeahead.min.js"></script>' . PHP_EOL;
 $include_dashboard_admin .= '<script src="' . LIB . '/packery-1.3.2/packery.pkgd.min.js"></script>' . PHP_EOL;
 $include_dashboard_admin .= '<script src="' . APPURL . APPINC . 'js/draggabilly.pkgd.min.js"></script>' . PHP_EOL;
 $include_dashboard_admin .= $widget_include;
 $include_dashboard_admin .= '<script src="' . APPURL . APPINC . 'js/dashboard-admin.js?rand=' . time() . '"></script>' . PHP_EOL;
 define( 'INCLUDE_DASHBOARD_ADMIN', $include_dashboard_admin );
 
-$include_dashboard = '<link rel="stylesheet" media="screen" href="' . APPURL . APPINC . 'css/handsontable.full.css">' . PHP_EOL;
-$include_dashboard .= '<script src="' . APPURL . APPINC . 'js/handsontable.full.js?rand=' . time() . '"></script>' . PHP_EOL;
-$include_dashboard .= '<script src="' . LIB . '/bootstrap3-typeahead-3.1.0/bootstrap3-typeahead.min.js"></script>' . PHP_EOL;
+$include_dashboard = '<link rel="stylesheet" media="screen" href="' . LIB . '/bootstrap-tagsinput-0.5.0/bootstrap-tagsinput.css">' . PHP_EOL;
+//$include_dashboard .= '<script src="' . APPURL . APPINC . 'js/handsontable.full.js?rand=' . time() . '"></script>' . PHP_EOL;
+$include_dashboard .= '<script src="' . LIB . '/bootstrap-tagsinput-0.5.0/bootstrap-tagsinput.min.js"></script>' . PHP_EOL;
+$include_dashboard .= '<script src="' . LIB . '/bootstrap3-typeahead-3.1.1/bootstrap3-typeahead.js"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . LIB . '/packery-1.3.2/packery.pkgd.min.js"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . LIB . '/datatables-1.10.5/jquery.dataTables.min.js"></script>' . PHP_EOL;
 $include_dashboard .= '<script src="' . LIB . '/datatables-1.10.5/tabletools/js/dataTables.tableTools.min.js"></script>' . PHP_EOL;

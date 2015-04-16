@@ -172,6 +172,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 	// Columns descriptions for axes
 	var xColumn = reportType.columns.column(widget.xaxis);
 	var yColumn = reportType.columns.column(widget.yaxis);
+	var serieColumn = widget.series && reportType.columns.column(widget.series);
 
 	// For a data point, set the X
 	var setX = function(obj, key) {
@@ -204,13 +205,14 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 	var axisTypeMapping = {
 		"date": "datetime",
 		"numeric": "linear",
+		"checkbox": "category",
 		"string": "category"
 	};
 
 	// Return a formatter function for a column
 	var formatter = function(column, customFormat) {
 		return function() {
-			var value = (this.value !== undefined) ? this.value : this.y;
+			var value = this.value !== undefined ? this.value : this.y;
 			return column.formatValue(value, customFormat);
 		};
 	};
@@ -315,11 +317,12 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 			pie: {
 				dataLabels: {
 					formatter: function() {
+						var formatted = formatter(xColumn, widget.xaxisFormat).apply({ value : this.point.name });
 						if(maximized) {
-							return this.point.name + " (" +  numeraljs(this.percentage / 100).format('0[.]00%') + ')';
+							return formatted + " (" +  numeraljs(this.percentage / 100).format('0[.]00%') + ')';
 						}
 						else {
-							return this.point.name;
+							return formatted;
 						}
 					},
 					distance: maximized ? 30 : 3,
@@ -497,9 +500,9 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 		},
 		function (result) {
 			// Filter the data
-			var reportData = result.data.filter(function(entry){
+			var reportData = result.data.filter(function(entry, index, array){
 				if(entry.deleted){ return false; }
-				return widgetry.filter(widget, entry);
+				return widgetry.filter(widget, entry, index, array);
 			});
 
 			var indexedData = {},
@@ -508,11 +511,16 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 
 			reportData.forEach(function(reportRow) {
 				var x, y, serie;
-				serie = currentSerie && reportRow[currentSerie] || UNAMED_SERIE;
-				x = reportRow[widget.xaxis];
-				y = reportRow[widget.yaxis];
+				if(currentSerie && serieColumn && serieColumn.typeValue(reportRow[currentSerie]).valueOf() !== undefined) {
+					serie = serieColumn.typeValue(reportRow[currentSerie]).valueOf();
+				}
+				else {
+					serie = UNAMED_SERIE;
+				}
+				x = xColumn.typeValue(reportRow[widget.xaxis]).valueOf();
+				y = yColumn.typeValue(reportRow[widget.yaxis]).valueOf() || 0;
 
-				if(!serie || !x || !y || x == "Invalid date" || y == "Invalid date") {
+				if(x === undefined || x == "Invalid date") {
 					return;
 				}
 
@@ -537,6 +545,8 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 				indexedData[serie][x].allValues.push(y);
 			});
 
+			console.log(indexedData);
+
 			var seriesData = [];
 			var serieIndexedData,
 					serieData;
@@ -560,7 +570,7 @@ widgetry.reportChart.displayWidget = function(widget, dashdisp, element, maximiz
 				}
 
 				seriesData.push({
-					name: i,
+					name: serieColumn ? serieColumn.formatValue(i) : i,
 					data: serieData,
 					type: widget.charttype,
 					stack: 0

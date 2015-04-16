@@ -82,7 +82,7 @@ Report.prototype.importSpark = function(row){
 	var thisR = this;
 	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
 	var entry = thisR.currentData[data_row];
-	
+
 	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true
 		&& typeof entry.ref == "string" && entry.ref != "" && typeof entry.source == "string" && entry.source != ""){
 		thisR.pendingSpark += 1;
@@ -144,7 +144,7 @@ Report.prototype.importGeo = function(row){
 	var thisR = this;
 	var data_row = Handsontable.hooks.run(thisR.handsontableHandler, 'modifyRow', row);
 	var entry = thisR.currentData[data_row];
-	
+
 	if(!(typeof entry.manual == "string" && entry.manual.toLowerCase() == "true") && entry.manual != true && typeof entry.sales == "string"){
 		thisR.pendingGeo += 1;
 		if(typeof entry.tradeDate == "string"){
@@ -419,6 +419,18 @@ Report.prototype.initialize = function(){
 						if(entry[2] != entry[3] && column_code != 'import'){
 							entry_data.modified = true;
 						}
+						// Fugit
+						if(column_code == "tradeDate" || column_code == "matDate"){
+							var tradedate = moment(entry_data.tradeDate, "YYYY-MM-DD"),
+								strikedate = moment(entry_data.strikeDate, "YYYY-MM-DD"),
+								matdate = moment(entry_data.matDate, "YYYY-MM-DD");
+							if (strikedate==""){ startperiod = tradedate; }
+							else { startperiod = strikedate; }
+							T_in_years = matdate.diff(startperiod, "days", true)/365;
+							entry_data.fugit = T_in_years;
+							modified = true;
+							entry_data.modified = true;
+						}
 						// Nominal EUR
 						if(column_code == "nominal" || column_code == "FX"){
 							entry_data.nominalEur = (parseFloat(entry_data.nominal) || 0) * (parseFloat(entry_data.FX) || 0);
@@ -433,7 +445,12 @@ Report.prototype.initialize = function(){
 						}
 						// Sales Credit Running
 						if(column_code == "marginRunningPct" || column_code == "nominalEur" || column_code == "nominal" || column_code == "FX"){
-							entry_data.marginRunningEur = (parseFloat(entry_data.marginRunningPct) || 0) * (parseFloat(entry_data.nominalEur) || 0);
+							var strikedate = moment(entry_data.strikeDate, "YYYY-MM-DD"),
+								matdate = moment(entry_data.matDate, "YYYY-MM-DD"),
+								yearstart = moment("2014-12-31", "YYYY-MM-DD"),
+								startperiod = strikedate.diff(yearstart, "days", true) > 0 ? strikedate: yearstart,
+								T_in_days = matdate.diff(startperiod, "days", true);
+							entry_data.marginRunningEur = (parseFloat(entry_data.marginRunningPct) || 0) * (parseFloat(entry_data.nominalEur) || 0) * T_in_days/365;
 							modified = true;
 							entry_data.modified = true;
 						}
@@ -558,9 +575,9 @@ Report.prototype.save = function(){
 		return true;
 	}
 	$('#cmd-confirm-save').button('loading');
-	
+
 	// Remove import
-	modifiedData.forEach(function(entry){ 
+	modifiedData.forEach(function(entry){
 		if(entry.import == 'error'){
 			delete entry.status;
 		}

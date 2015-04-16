@@ -101,7 +101,15 @@ function da_load(){
 	$req = $appdb->query_all('SELECT * FROM ' . TABLE_REPORT_TYPE, array());
 	$type_list = array();
 	foreach($req as &$type){
-		$type_list[] = json_decode($type['json']);
+		$reportType = json_decode($type['json']);
+
+		foreach($reportType->columns as &$column){
+			if(isset($column->sourceList)){
+				$column->source = $appdb->get_param($column->sourceList);
+			}
+		}
+
+		$type_list[] = $reportType;
 	}
 	//Return the data
 	$result = array('data' => $data, 'argList' => $arg_list, 'miscParam' => $misc_param, 'user' => $user_options['json_private'], 'userOptions' => $user_options['json_public'], 'reportTypeList' => $type_list);
@@ -193,7 +201,9 @@ function report_load(){
 		$add = true;
 		if(!$all){
 			// Check if the user is related to the entry
-			$add = $entry['user'] == $as_login || (isset($last_entry->pricer) && $last_entry->pricer == $as_login) || (isset($last_entry->pricer2) && $last_entry->pricer2 == $as_login);
+			// DEALS SCREEN MATCHES PRICER OR PRICER2 OR PRICER3
+			/*$add = $entry['user'] == $as_login || (isset($last_entry->pricer) && $last_entry->pricer == $as_login) || (isset($last_entry->pricer2) && $last_entry->pricer2 == $as_login);*/
+			$add = $entry['user'] == $as_login;
 		}
 		if(!$all && !$add && $team){
 			if($read){

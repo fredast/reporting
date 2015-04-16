@@ -49,7 +49,7 @@ function page_header($page_title = APP_NAME, $additional_head = "") {
 	// Moment.js
 	$header .= '<script src="' . APPURL . APPINC . 'js/moment.js"></script>' . PHP_EOL;
 	// Numeral.js
-	$header .= '<script src="' . LIB . '/numeral-1.5.3/numeral.min.js"></script>' . PHP_EOL;
+	$header .= '<script src="' . LIB . '/numeral-1.5.3-custom/numeral.min.js"></script>' . PHP_EOL;
 	$header .= '<script>numeral.language("custom", {
 			delimiters: {
 					thousands: ",",

@@ -187,6 +187,13 @@ width: 100% !important;
 	height: 23px;
 }
 
+#dashContainer .widget-content .bootstrap-tagsinput {
+	min-height: 23px;
+	line-height: 23px;
+	padding: 0px 5px;
+  width: 100%;
+}
+
 #dashContainer .widget-content .input-group-addon {
 	font-size: 10px;
 	padding: 4px 7px 5px 7px;
@@ -283,6 +290,10 @@ th.sorting_desc:after {
 /* Alignment in cells */
 table .type-numeric {
 	text-align: right;
+}
+
+table .type-checkbox {
+	text-align: center;
 }
 
 /* For full-width modals */
